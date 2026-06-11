@@ -221,6 +221,27 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     setPublishing(false)
   }
 
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function refreshWeek() {
+    setRefreshing(true)
+    const start = toDateStr(weekStart)
+    const end = toDateStr(addDays(weekStart, 5))
+    const [{ data }, { data: unavail }] = await Promise.all([
+      supabase.from('roster_shifts').select('*').gte('date', start).lte('date', end),
+      supabase.from('unavailability').select('user_id, date').gte('date', start).lte('date', end),
+    ])
+    if (!data || data.length === 0) { setShifts({}); setHasRoster(false); setPublished(false); setEditKey(null) }
+    else {
+      setShifts(dbShiftsToMap(data))
+      setHasRoster(true)
+      setPublished(data.some((s: any) => s.published))
+      setEditKey(null)
+    }
+    setUnavailSet(new Set((unavail ?? []).map((u: any) => `${u.user_id}_${u.date}`)))
+    setRefreshing(false)
+  }
+
   async function unpublishRoster() {
     const start = toDateStr(weekStart)
     const end = toDateStr(addDays(weekStart, 5))
@@ -392,6 +413,10 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">→</button>
           <button onClick={() => setWeekStart(getWeekStart(new Date()))}
             className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50">Today</button>
+          <button onClick={refreshWeek} disabled={refreshing}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+            {refreshing ? '↻…' : '↻ Refresh'}
+          </button>
           {published && (
             <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200 font-medium">
               ✓ Published
