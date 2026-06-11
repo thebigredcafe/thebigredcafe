@@ -460,7 +460,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         {Object.entries(ROLE_COLOR).map(([r, c]) => (
           <span key={r} className={`text-[11px] px-2 py-0.5 rounded border ${c.bg} ${c.border} ${c.text}`}>{c.label}</span>
         ))}
-        <span className="text-[11px] px-2 py-0.5 rounded border-2 bg-red-100 border-red-500 text-red-700 font-bold">OFF</span>
+        <span className="text-[11px] px-2 py-0.5 rounded border bg-gray-100 border-gray-400 text-gray-500 font-medium">OFF</span>
       </div>
 
       {/* Grid */}
@@ -526,8 +526,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                             onChange={(data) => { setShift(member.id, dateStr, data); setEditKey(null) }}
                           />
                           {isUnavail && (
-                            <div className="absolute inset-0 rounded pointer-events-none bg-red-500/30 border-2 border-red-500 flex items-center justify-center">
-                              <span className="text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded select-none">OFF</span>
+                            <div className="absolute inset-0 rounded pointer-events-none bg-gray-400/20 border border-gray-400 flex items-center justify-center">
+                              <span className="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded select-none">OFF</span>
                             </div>
                           )}
                         </div>
@@ -642,6 +642,7 @@ function ShiftCell({ shift, isEditing, hasFixture, isSchool, suggestedRole, empt
         {shift ? (
           <div className="space-y-0.5">
             <div className="font-semibold text-[11px] leading-tight">{fmt(shift.start_time)} – {fmt(shift.end_time)}</div>
+            <div className="text-[10px] opacity-75 font-medium">{c?.label ?? shift.role}</div>
             {shift.split_time && (
               <div className="text-[10px] opacity-70">↕ {fmt(shift.split_time)} {ROLE_COLOR[shift.split_role ?? '']?.label ?? shift.split_role}</div>
             )}
