@@ -300,6 +300,14 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
   const MANAGER_ID = '37f077a6-bc96-4599-b09e-314afdf0cfb0'
 
+  // Force these into kitchen regardless of skill mix
+  const FORCE_KITCHEN_IDS = [
+    '9beb8166-78ca-4b76-9385-bf5d2f2a58a2', // Nick
+    '856b416c-9e73-478a-9960-85404a9962b6', // Oisin
+    '711ab8b4-c9c1-4bb4-855d-e781f238f13a', // Jye
+    '86f72d53-da1d-4ede-9f52-1a644758d1ff', // Aidan
+  ]
+
   // New staff placeholders — green section below FOH
   const NEW_STAFF_IDS = [
     'c029f573-99fb-48ef-be18-d94166e28ff9', // Meagan
@@ -328,6 +336,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   function staffGroup(member: StaffMember): string {
     if (member.id === MANAGER_ID) return 'manager'
     if (NEW_STAFF_IDS.includes(member.id)) return 'new_staff'
+    if (FORCE_KITCHEN_IDS.includes(member.id)) return 'kitchen'
     if (SENIOR_SCHOOL_IDS.includes(member.id)) return 'school_senior'
     if ((member as any).is_school_student) return 'school_junior'
     const roles = rolesByUser[member.id] ?? []
@@ -355,6 +364,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
   const groupedStaff = useMemo(() => {
     const groups: Record<string, StaffMember[]> = { manager: [], foh: [], new_staff: [], kitchen: [], school_senior: [], school_junior: [] }
+
     for (const m of staff) {
       const g = staffGroup(m)
       groups[g].push(m)
