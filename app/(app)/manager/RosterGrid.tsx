@@ -336,13 +336,24 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     return 'foh'
   }
 
+  const ROLE_ROW: Record<string, { rowBg: string; nameBg: string; cellEmpty: string }> = {
+    barista:           { rowBg: 'bg-red-50',    nameBg: 'bg-red-50',    cellEmpty: 'bg-red-50 border-red-200 border-dashed' },
+    customer_service:  { rowBg: 'bg-yellow-50', nameBg: 'bg-yellow-50', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
+    floor_staff:       { rowBg: 'bg-yellow-50', nameBg: 'bg-yellow-50', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
+    kitchen_cook:      { rowBg: 'bg-blue-50',   nameBg: 'bg-blue-50',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
+    kitchen_cook_prep: { rowBg: 'bg-blue-50',   nameBg: 'bg-blue-50',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
+    dishwasher:        { rowBg: 'bg-sky-50',    nameBg: 'bg-sky-50',    cellEmpty: 'bg-sky-50 border-sky-200 border-dashed' },
+    split:             { rowBg: 'bg-purple-50', nameBg: 'bg-purple-50', cellEmpty: 'bg-purple-50 border-purple-200 border-dashed' },
+    new_staff:         { rowBg: 'bg-green-50',  nameBg: 'bg-green-50',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+  }
+
+  function staffRowStyle(member: StaffMember) {
+    const primary = autoRole(rolesByUser[member.id] ?? [])
+    return ROLE_ROW[primary] ?? ROLE_ROW['new_staff']
+  }
+
   function cellEmptyClass(group: string, member: StaffMember): string {
-    if (group === 'foh') {
-      const primary = autoRole(rolesByUser[member.id] ?? [])
-      if (primary === 'barista') return 'bg-red-50 border-red-200 border-dashed'
-      return 'bg-yellow-50 border-yellow-200 border-dashed'
-    }
-    return GROUP_META[group].cellEmpty
+    return staffRowStyle(member).cellEmpty
   }
 
   const groupedStaff = useMemo(() => {
@@ -456,8 +467,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                   </tr>
                 ),
                 // Staff row
-                <tr key={member.id} className={`${meta.rowBg} border-b border-gray-100`}>
-                  <td className={`px-3 py-1 sticky left-0 z-10 ${meta.nameBg}`}>
+                <tr key={member.id} className={`${staffRowStyle(member).rowBg} border-b border-gray-100`}>
+                  <td className={`px-3 py-1 sticky left-0 z-10 ${staffRowStyle(member).nameBg}`}>
                     <div className="font-medium text-gray-900">{member.full_name.split(' ')[0]}</div>
                     {isSchool && <div className="text-[10px] text-gray-400">school</div>}
                   </td>
