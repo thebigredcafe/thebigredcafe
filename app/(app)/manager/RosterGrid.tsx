@@ -177,9 +177,12 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     const next: Record<string, ShiftData> = {}
     for (const m of staff) {
       for (let i = 0; i < 6; i++) {
+        const dateStr = toDateStr(weekDates[i])
+        const key = `${m.id}_${dateStr}`
+        if (unavailSet.has(key)) continue  // skip unavailable staff
         const t = templates.find(t => t.user_id === m.id && t.day_of_week === DAYS[i])
         if (t?.start_time) {
-          next[`${m.id}_${toDateStr(weekDates[i])}`] = {
+          next[key] = {
             start_time: t.start_time, end_time: t.end_time,
             role: t.role ?? autoRole(rolesByUser[m.id] ?? []),
             split_time: t.split_time ?? undefined, split_role: t.split_role ?? undefined, notes: t.notes ?? undefined,
@@ -254,6 +257,32 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   const dailyTotals = useMemo(() => weekDates.map(date => {
     const ds = toDateStr(date)
     return staff.reduce((s, m) => { const sh = shifts[`${m.id}_${ds}`]; return s + (sh ? calcHours(sh.start_time, sh.end_time) : 0) }, 0)
+  }), [weekDates, staff, shifts])
+
+  // Coverage check per day
+  const dailyCoverage = useMemo(() => weekDates.map((date, di) => {
+    const ds = toDateStr(date)
+    const isSat = di === 5
+    const dayShifts = staff.map(m => ({ member: m, shift: shifts[`${m.id}_${ds}`] ?? null })).filter(x => x.shift)
+
+    const baristas   = dayShifts.filter(x => x.shift!.role === 'barista' || x.shift!.split_time)
+    const kitchen    = dayShifts.filter(x => x.shift!.role === 'kitchen_cook' || x.shift!.role === 'kitchen_cook_prep')
+    const cs         = dayShifts.filter(x => x.shift!.role === 'customer_service' || x.shift!.role === 'floor_staff')
+    const dishes     = dayShifts.filter(x => x.shift!.role === 'dishwasher' || x.shift!.split_time)
+
+    const kitOpener  = kitchen.some(x => x.shift!.start_time <= '06:30:00')
+    const kitCloser  = kitchen.some(x => x.shift!.end_time >= '14:00:00')
+
+    const needBar  = isSat ? 2 : 2
+    const needKit  = isSat ? 2 : 1
+    const needCS   = 1
+
+    return {
+      bar:  { ok: baristas.length >= needBar,  count: baristas.length,  need: needBar },
+      kit:  { ok: kitchen.length >= needKit && kitOpener && kitCloser, count: kitchen.length, need: needKit, opener: kitOpener, closer: kitCloser },
+      cs:   { ok: cs.length >= needCS,         count: cs.length,        need: needCS },
+      dish: { count: dishes.length },
+    }
   }), [weekDates, staff, shifts])
 
   const staffTotals = new Map(staff.map(m => [
@@ -450,6 +479,27 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             })}
           </tbody>
           <tfoot>
+            {/* Coverage summary row */}
+            <tr className="border-t-2 border-gray-300 bg-gray-50">
+              <td className="px-3 py-2 sticky left-0 bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Cover</td>
+              {dailyCoverage.map((cov, i) => (
+                <td key={i} className="px-1 py-1.5">
+                  <div className="flex flex-col gap-0.5">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${cov.bar.ok ? 'bg-red-100 text-red-700' : 'bg-red-200 text-red-800 font-bold'}`}>
+                      Bar {cov.bar.count}/{cov.bar.need}{!cov.bar.ok ? ' ✗' : ''}
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${cov.kit.ok ? 'bg-blue-100 text-blue-700' : 'bg-blue-200 text-blue-800 font-bold'}`}>
+                      Kit {cov.kit.count}{!cov.kit.opener ? ' no open' : !cov.kit.closer ? ' no close' : cov.kit.ok ? '' : ' ✗'}
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${cov.cs.ok ? 'bg-yellow-100 text-yellow-700' : 'bg-yellow-200 text-yellow-800 font-bold'}`}>
+                      CS {cov.cs.count}/{cov.cs.need}{!cov.cs.ok ? ' ✗' : ''}
+                    </span>
+                  </div>
+                </td>
+              ))}
+              <td />
+            </tr>
+            {/* Hours total row */}
             <tr className="bg-gray-50 border-t border-gray-200">
               <td className="px-3 py-2 sticky left-0 bg-gray-50 font-medium text-gray-500">Total</td>
               {dailyTotals.map((t, i) => (
