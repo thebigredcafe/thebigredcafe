@@ -319,7 +319,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   const GROUP_META: Record<string, { label: string; rowBg: string; nameBg: string; headerBg: string; text: string; cellEmpty: string }> = {
     manager:      { label: 'Manager',           rowBg: 'bg-gray-100',    nameBg: 'bg-gray-100',   headerBg: 'bg-gray-200',    text: 'text-gray-700',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
     foh:          { label: 'FOH',               rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
-    new_staff:    { label: 'New Staff',         rowBg: 'bg-green-50',    nameBg: 'bg-green-50',   headerBg: 'bg-green-100',   text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+    new_staff:    { label: 'New Staff',         rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
     kitchen:      { label: 'Kitchen',           rowBg: 'bg-blue-50',     nameBg: 'bg-blue-50',    headerBg: 'bg-blue-100',    text: 'text-blue-700',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
     school_senior:{ label: 'School — Senior',   rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
     school_junior:{ label: 'School — Junior',   rowBg: 'bg-green-50',    nameBg: 'bg-green-50',   headerBg: 'bg-green-100',   text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
@@ -339,7 +339,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   const GROUP_ROW: Record<string, { rowBg: string; nameBg: string; cellEmpty: string }> = {
     manager:       { rowBg: 'bg-gray-100',   nameBg: 'bg-gray-100',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
     foh:           { rowBg: 'bg-yellow-50',  nameBg: 'bg-yellow-50',  cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
-    new_staff:     { rowBg: 'bg-green-50',   nameBg: 'bg-green-50',   cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+    new_staff:     { rowBg: 'bg-yellow-50',  nameBg: 'bg-yellow-50',  cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
     kitchen:       { rowBg: 'bg-blue-50',    nameBg: 'bg-blue-50',    cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
     school_senior: { rowBg: 'bg-yellow-50',  nameBg: 'bg-yellow-50',  cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
     school_junior: { rowBg: 'bg-green-50',   nameBg: 'bg-green-50',   cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
