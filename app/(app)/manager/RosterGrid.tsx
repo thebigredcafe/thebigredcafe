@@ -318,7 +318,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   const GROUP_ORDER = ['manager', 'foh', 'new_staff', 'kitchen', 'school_senior', 'school_junior']
   const GROUP_META: Record<string, { label: string; rowBg: string; nameBg: string; headerBg: string; text: string; cellEmpty: string }> = {
     manager:      { label: 'Manager',           rowBg: 'bg-gray-100',    nameBg: 'bg-gray-100',   headerBg: 'bg-gray-200',    text: 'text-gray-700',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
-    foh:          { label: 'FOH',               rowBg: 'bg-white',       nameBg: 'bg-white',      headerBg: 'bg-slate-100',   text: 'text-slate-700',  cellEmpty: 'bg-slate-50 border-slate-200 border-dashed' },
+    foh:          { label: 'FOH',               rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
     new_staff:    { label: 'New Staff',         rowBg: 'bg-green-50',    nameBg: 'bg-green-50',   headerBg: 'bg-green-100',   text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
     kitchen:      { label: 'Kitchen',           rowBg: 'bg-blue-50',     nameBg: 'bg-blue-50',    headerBg: 'bg-blue-100',    text: 'text-blue-700',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
     school_senior:{ label: 'School — Senior',   rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
@@ -336,24 +336,21 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     return 'foh'
   }
 
-  const ROLE_ROW: Record<string, { rowBg: string; nameBg: string; cellEmpty: string }> = {
-    barista:           { rowBg: 'bg-red-50',    nameBg: 'bg-red-50',    cellEmpty: 'bg-red-50 border-red-200 border-dashed' },
-    customer_service:  { rowBg: 'bg-yellow-50', nameBg: 'bg-yellow-50', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
-    floor_staff:       { rowBg: 'bg-yellow-50', nameBg: 'bg-yellow-50', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
-    kitchen_cook:      { rowBg: 'bg-blue-50',   nameBg: 'bg-blue-50',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
-    kitchen_cook_prep: { rowBg: 'bg-blue-50',   nameBg: 'bg-blue-50',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
-    dishwasher:        { rowBg: 'bg-sky-50',    nameBg: 'bg-sky-50',    cellEmpty: 'bg-sky-50 border-sky-200 border-dashed' },
-    split:             { rowBg: 'bg-purple-50', nameBg: 'bg-purple-50', cellEmpty: 'bg-purple-50 border-purple-200 border-dashed' },
-    new_staff:         { rowBg: 'bg-green-50',  nameBg: 'bg-green-50',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+  const GROUP_ROW: Record<string, { rowBg: string; nameBg: string; cellEmpty: string }> = {
+    manager:       { rowBg: 'bg-gray-100',   nameBg: 'bg-gray-100',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
+    foh:           { rowBg: 'bg-yellow-50',  nameBg: 'bg-yellow-50',  cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
+    new_staff:     { rowBg: 'bg-green-50',   nameBg: 'bg-green-50',   cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+    kitchen:       { rowBg: 'bg-blue-50',    nameBg: 'bg-blue-50',    cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
+    school_senior: { rowBg: 'bg-yellow-50',  nameBg: 'bg-yellow-50',  cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
+    school_junior: { rowBg: 'bg-green-50',   nameBg: 'bg-green-50',   cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
   }
 
-  function staffRowStyle(member: StaffMember) {
-    const primary = autoRole(rolesByUser[member.id] ?? [])
-    return ROLE_ROW[primary] ?? ROLE_ROW['new_staff']
+  function staffRowStyle(group: string) {
+    return GROUP_ROW[group] ?? GROUP_ROW['new_staff']
   }
 
-  function cellEmptyClass(group: string, member: StaffMember): string {
-    return staffRowStyle(member).cellEmpty
+  function cellEmptyClass(group: string, _member: StaffMember): string {
+    return staffRowStyle(group).cellEmpty
   }
 
   const groupedStaff = useMemo(() => {
@@ -467,8 +464,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                   </tr>
                 ),
                 // Staff row
-                <tr key={member.id} className={`${staffRowStyle(member).rowBg} border-b border-gray-100`}>
-                  <td className={`px-3 py-1 sticky left-0 z-10 ${staffRowStyle(member).nameBg}`}>
+                <tr key={member.id} className={`${staffRowStyle(group).rowBg} border-b border-gray-100`}>
+                  <td className={`px-3 py-1 sticky left-0 z-10 ${staffRowStyle(group).nameBg}`}>
                     <div className="font-medium text-gray-900">{member.full_name.split(' ')[0]}</div>
                     {isSchool && <div className="text-[10px] text-gray-400">school</div>}
                   </td>
