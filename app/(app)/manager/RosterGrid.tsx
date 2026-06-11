@@ -312,6 +312,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     '68af9f7b-4af5-42b4-87d2-b77113d4ccbd', // Kellarney
     'a4f1273b-70f4-4bc3-80ab-ffd38eb8c5f9', // Eden
     '2cad2f73-187a-4a6b-bf79-d428312af8e7', // Molly
+    'afe088a9-3f42-47b8-b5c7-f94a9c95ca48', // Megan Thomas
   ]
 
   const GROUP_ORDER = ['manager', 'foh', 'new_staff', 'kitchen', 'school_senior', 'school_junior']
@@ -333,6 +334,15 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     const primary = autoRole(roles)
     if (primary === 'kitchen_cook' || primary === 'kitchen_cook_prep') return 'kitchen'
     return 'foh'
+  }
+
+  function cellEmptyClass(group: string, member: StaffMember): string {
+    if (group === 'foh') {
+      const primary = autoRole(rolesByUser[member.id] ?? [])
+      if (primary === 'barista') return 'bg-red-50 border-red-200 border-dashed'
+      return 'bg-yellow-50 border-yellow-200 border-dashed'
+    }
+    return GROUP_META[group].cellEmpty
   }
 
   const groupedStaff = useMemo(() => {
@@ -467,7 +477,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                             isSaturday={di === 5}
                             isSchool={isSchool}
                             suggestedRole={autoRole(roles)}
-                            emptyClass={meta.cellEmpty}
+                            emptyClass={cellEmptyClass(group, member)}
                             isOpen={editKey === key}
                             onOpen={() => setEditKey(k => k === key ? null : key)}
                             onChange={(data) => { setShift(member.id, dateStr, data); setEditKey(null) }}
