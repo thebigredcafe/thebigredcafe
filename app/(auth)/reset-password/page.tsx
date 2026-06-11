@@ -1,5 +1,6 @@
 'use client'
 // app/(auth)/reset-password/page.tsx
+export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import Link from 'next/link'

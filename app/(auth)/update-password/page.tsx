@@ -1,5 +1,6 @@
 'use client'
 // app/(auth)/update-password/page.tsx
+export const dynamic = 'force-dynamic'
 // Supabase redirects here after the user clicks the reset email link
 
 import { useState } from 'react'
