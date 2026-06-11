@@ -275,6 +275,19 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     })
   }
 
+  async function markUnavailable(userId: string, date: string) {
+    await supabase.from('unavailability').upsert({ user_id: userId, date, reason: 'unavailable' }, { onConflict: 'user_id,date' })
+    setUnavailSet(s => new Set([...s, `${userId}_${date}`]))
+    setShift(userId, date, null)
+    setEditKey(null)
+  }
+
+  async function removeUnavailability(userId: string, date: string) {
+    await supabase.from('unavailability').delete().eq('user_id', userId).eq('date', date)
+    setUnavailSet(s => { const n = new Set(s); n.delete(`${userId}_${date}`); return n })
+    setEditKey(null)
+  }
+
   const dailyTotals = useMemo(() => weekDates.map(date => {
     const ds = toDateStr(date)
     return staff.reduce((s, m) => { const sh = shifts[`${m.id}_${ds}`]; return s + (sh ? calcHours(sh.start_time, sh.end_time) : 0) }, 0)
@@ -519,11 +532,14 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                             hasFixture={hasFixture(member.id, dateStr)}
                             isSaturday={di === 5}
                             isSchool={isSchool}
+                            isUnavail={isUnavail}
                             suggestedRole={autoRole(roles)}
                             emptyClass={cellEmptyClass(group, member)}
                             isOpen={editKey === key}
                             onOpen={() => setEditKey(k => k === key ? null : key)}
                             onChange={(data) => { setShift(member.id, dateStr, data); setEditKey(null) }}
+                            onMarkUnavailable={() => markUnavailable(member.id, dateStr)}
+                            onRemoveUnavailability={() => removeUnavailability(member.id, dateStr)}
                           />
                           {isUnavail && (
                             <div className="absolute inset-0 rounded pointer-events-none bg-gray-400/20 border border-gray-400 flex items-center justify-center">
@@ -590,14 +606,17 @@ interface ShiftCellProps {
   hasFixture: boolean
   isSaturday: boolean
   isSchool: boolean
+  isUnavail: boolean
   suggestedRole: string
   emptyClass: string
   isOpen: boolean
   onOpen: () => void
   onChange: (data: ShiftData | null) => void
+  onMarkUnavailable: () => void
+  onRemoveUnavailability: () => void
 }
 
-function ShiftCell({ shift, isEditing, hasFixture, isSchool, suggestedRole, emptyClass, onOpen, onChange }: ShiftCellProps) {
+function ShiftCell({ shift, isEditing, hasFixture, isSchool, isUnavail, suggestedRole, emptyClass, onOpen, onChange, onMarkUnavailable, onRemoveUnavailability }: ShiftCellProps) {
   const [start, setStart] = useState(shift?.start_time ?? '05:45')
   const [end, setEnd] = useState(shift?.end_time ?? '14:00')
   const [role, setRole] = useState(shift?.role ?? suggestedRole)
@@ -730,6 +749,19 @@ function ShiftCell({ shift, isEditing, hasFixture, isSchool, suggestedRole, empt
               className="px-3 text-xs py-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200">
               Clear
             </button>
+          </div>
+          <div className="border-t border-gray-100 pt-2">
+            {isUnavail ? (
+              <button onClick={onRemoveUnavailability}
+                className="w-full text-xs py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">
+                Remove unavailability
+              </button>
+            ) : (
+              <button onClick={onMarkUnavailable}
+                className="w-full text-xs py-1.5 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100">
+                Mark as unavailable
+              </button>
+            )}
           </div>
         </div>
       )}
