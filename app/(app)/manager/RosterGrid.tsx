@@ -425,7 +425,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         {Object.entries(ROLE_COLOR).map(([r, c]) => (
           <span key={r} className={`text-[11px] px-2 py-0.5 rounded border ${c.bg} ${c.border} ${c.text}`}>{c.label}</span>
         ))}
-        <span className="text-[11px] px-2 py-0.5 rounded border bg-red-50 border-red-300 border-dashed text-red-500">Unavailable</span>
+        <span className="text-[11px] px-2 py-0.5 rounded border-2 bg-red-100 border-red-500 text-red-700 font-bold">OFF</span>
       </div>
 
       {/* Grid */}
@@ -491,7 +491,9 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                             onChange={(data) => { setShift(member.id, dateStr, data); setEditKey(null) }}
                           />
                           {isUnavail && (
-                            <div className="absolute inset-0 rounded pointer-events-none bg-red-400/20 border border-red-300 border-dashed" title="Unavailable this day" />
+                            <div className="absolute inset-0 rounded pointer-events-none bg-red-500/30 border-2 border-red-500 flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded select-none">OFF</span>
+                            </div>
                           )}
                         </div>
                       </td>
