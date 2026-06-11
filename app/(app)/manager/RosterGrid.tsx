@@ -533,6 +533,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                             isSaturday={di === 5}
                             isSchool={isSchool}
                             isUnavail={isUnavail}
+                            schoolFromTime={isSchool ? templates.find(t => t.user_id === member.id && t.day_of_week === DAYS[di])?.start_time ?? undefined : undefined}
                             suggestedRole={autoRole(roles)}
                             emptyClass={cellEmptyClass(group, member)}
                             isOpen={editKey === key}
@@ -607,6 +608,7 @@ interface ShiftCellProps {
   isSaturday: boolean
   isSchool: boolean
   isUnavail: boolean
+  schoolFromTime?: string
   suggestedRole: string
   emptyClass: string
   isOpen: boolean
@@ -616,7 +618,7 @@ interface ShiftCellProps {
   onRemoveUnavailability: () => void
 }
 
-function ShiftCell({ shift, isEditing, hasFixture, isSchool, isUnavail, suggestedRole, emptyClass, onOpen, onChange, onMarkUnavailable, onRemoveUnavailability }: ShiftCellProps) {
+function ShiftCell({ shift, isEditing, hasFixture, isSchool, isUnavail, schoolFromTime, suggestedRole, emptyClass, onOpen, onChange, onMarkUnavailable, onRemoveUnavailability }: ShiftCellProps) {
   const [start, setStart] = useState(shift?.start_time ?? '05:45')
   const [end, setEnd] = useState(shift?.end_time ?? '14:00')
   const [role, setRole] = useState(shift?.role ?? suggestedRole)
@@ -668,7 +670,7 @@ function ShiftCell({ shift, isEditing, hasFixture, isSchool, isUnavail, suggeste
             {shift.notes && <div className="text-[10px] opacity-60 truncate max-w-[100px]">{shift.notes}</div>}
           </div>
         ) : (
-          <span className="text-[11px]">{hasFixture ? '⚽ game' : isSchool ? '3:30pm+' : '+'}</span>
+          <span className="text-[11px]">{hasFixture ? '⚽ game' : isSchool ? `from ${schoolFromTime ? fmt(schoolFromTime) : '3:30pm'}` : '+'}</span>
         )}
       </button>
 
