@@ -298,37 +298,45 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     return fixtures.some(f => f.team_id === m.sport_team_id && f.date === dateStr)
   }
 
-  // Ben is the manager/owner — always at top
   const MANAGER_ID = '37f077a6-bc96-4599-b09e-314afdf0cfb0'
-  // Force these staff into barista group regardless of skill entries
-  const FORCE_BARISTA_IDS = [
-    '46138c3d-40de-4105-9264-bb45c85a6dc4', // Ellie
-    '8c6c158a-b733-4b88-a491-5b106839001b', // Lyla
+
+  // New staff placeholders — green section below FOH
+  const NEW_STAFF_IDS = [
+    'c029f573-99fb-48ef-be18-d94166e28ff9', // Meagan
+    '1ef94d56-d1aa-4589-b0b2-01a8280128af', // Caitlin
   ]
 
-  const GROUP_ORDER = ['manager', 'barista', 'customer_service', 'kitchen', 'school']
+  // Senior school kids — yellow, listed above junior school
+  const SENIOR_SCHOOL_IDS = [
+    '3e2ffb1c-19a3-441d-bada-0ec4755d0749', // Ileana
+    '68af9f7b-4af5-42b4-87d2-b77113d4ccbd', // Kellarney
+    'a4f1273b-70f4-4bc3-80ab-ffd38eb8c5f9', // Eden
+    '2cad2f73-187a-4a6b-bf79-d428312af8e7', // Molly
+  ]
+
+  const GROUP_ORDER = ['manager', 'foh', 'new_staff', 'kitchen', 'school_senior', 'school_junior']
   const GROUP_META: Record<string, { label: string; rowBg: string; nameBg: string; headerBg: string; text: string; cellEmpty: string }> = {
-    manager:          { label: 'Manager',           rowBg: 'bg-gray-100',     nameBg: 'bg-gray-100',  headerBg: 'bg-gray-200',   text: 'text-gray-700',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
-    barista:          { label: 'Baristas',          rowBg: 'bg-red-50',       nameBg: 'bg-red-50',    headerBg: 'bg-red-100',    text: 'text-red-700',    cellEmpty: 'bg-red-50 border-red-200 border-dashed' },
-    customer_service: { label: 'Customer Service',  rowBg: 'bg-yellow-50',    nameBg: 'bg-yellow-50', headerBg: 'bg-yellow-100', text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
-    kitchen:          { label: 'Kitchen',           rowBg: 'bg-blue-50',      nameBg: 'bg-blue-50',   headerBg: 'bg-blue-100',   text: 'text-blue-700',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
-    school:           { label: 'School Staff',      rowBg: 'bg-green-50',     nameBg: 'bg-green-50',  headerBg: 'bg-green-100',  text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+    manager:      { label: 'Manager',           rowBg: 'bg-gray-100',    nameBg: 'bg-gray-100',   headerBg: 'bg-gray-200',    text: 'text-gray-700',   cellEmpty: 'bg-gray-100 border-gray-300 border-dashed' },
+    foh:          { label: 'FOH',               rowBg: 'bg-white',       nameBg: 'bg-white',      headerBg: 'bg-slate-100',   text: 'text-slate-700',  cellEmpty: 'bg-slate-50 border-slate-200 border-dashed' },
+    new_staff:    { label: 'New Staff',         rowBg: 'bg-green-50',    nameBg: 'bg-green-50',   headerBg: 'bg-green-100',   text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
+    kitchen:      { label: 'Kitchen',           rowBg: 'bg-blue-50',     nameBg: 'bg-blue-50',    headerBg: 'bg-blue-100',    text: 'text-blue-700',   cellEmpty: 'bg-blue-50 border-blue-200 border-dashed' },
+    school_senior:{ label: 'School — Senior',   rowBg: 'bg-yellow-50',   nameBg: 'bg-yellow-50',  headerBg: 'bg-yellow-100',  text: 'text-yellow-700', cellEmpty: 'bg-yellow-50 border-yellow-200 border-dashed' },
+    school_junior:{ label: 'School — Junior',   rowBg: 'bg-green-50',    nameBg: 'bg-green-50',   headerBg: 'bg-green-100',   text: 'text-green-700',  cellEmpty: 'bg-green-50 border-green-200 border-dashed' },
   }
 
   function staffGroup(member: StaffMember): string {
     if (member.id === MANAGER_ID) return 'manager'
-    if (FORCE_BARISTA_IDS.includes(member.id)) return 'barista'
-    if ((member as any).is_school_student) return 'school'
+    if (NEW_STAFF_IDS.includes(member.id)) return 'new_staff'
+    if (SENIOR_SCHOOL_IDS.includes(member.id)) return 'school_senior'
+    if ((member as any).is_school_student) return 'school_junior'
     const roles = rolesByUser[member.id] ?? []
     const primary = autoRole(roles)
-    if (primary === 'barista') return 'barista'
     if (primary === 'kitchen_cook' || primary === 'kitchen_cook_prep') return 'kitchen'
-    if (roles.length === 0) return 'school'
-    return 'customer_service'
+    return 'foh'
   }
 
   const groupedStaff = useMemo(() => {
-    const groups: Record<string, StaffMember[]> = { manager: [], barista: [], customer_service: [], kitchen: [], school: [] }
+    const groups: Record<string, StaffMember[]> = { manager: [], foh: [], new_staff: [], kitchen: [], school_senior: [], school_junior: [] }
     for (const m of staff) {
       const g = staffGroup(m)
       groups[g].push(m)
@@ -424,7 +432,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
               const roles = rolesByUser[member.id] ?? []
               const isSchool = !!(member as any).is_school_student
               const meta = GROUP_META[group]
-              const prevGroup = mi > 0 ? sortedStaff[mi - 1].group : null
+              const prevGroup = mi > 0 ? sortedStaff[mi - 1]?.group : null
               const isFirstInGroup = group !== prevGroup
               const total = staffTotals.get(member.id) ?? 0
 
