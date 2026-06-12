@@ -28,7 +28,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-2 py-4 space-y-1">
           {isManager ? (
             <>
-              <NavLink href="/manager">Roster Builder</NavLink>
+              <NavLink href="/manager">Roster</NavLink>
+              <NavLink href="/manager/requirements">Requirements</NavLink>
               <NavLink href="/manager/staff">Staff</NavLink>
               <NavLink href="/manager/teams">Sport Teams</NavLink>
               <NavLink href="/manager/settings">Settings</NavLink>

@@ -291,6 +291,94 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     setEditKey(null)
   }
 
+  // ── Auto-fill from Requirements ──────────────────────────────────────────
+  function autoFill() {
+    let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
+    try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
+
+    const minToTime = (m: number) =>
+      `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+
+    const next: Record<string, ShiftData> = {}
+
+    weekDates.forEach((date, di) => {
+      const dayName = DAYS[di] as string
+      const slots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
+      if (!slots.length) return
+
+      const dateStr = toDateStr(date)
+      const assignedToday = new Set<string>()
+
+      for (const slot of slots) {
+        const start = minToTime(slot.startMin)
+        const end   = minToTime(slot.endMin)
+        const isAfternoonCS = (slot.role === 'customer_service' || slot.role === 'floor_staff') && slot.startMin >= 14 * 60
+
+        // Candidate staff: has the role skill, not unavailable, not already assigned today
+        const candidates = staff.filter(m => {
+          if (assignedToday.has(m.id)) return false
+          if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          const roles = rolesByUser[m.id] ?? []
+          return roles.some(r =>
+            r.role === slot.role ||
+            (slot.role === 'kitchen_cook' && r.role === 'kitchen_cook_prep') ||
+            (slot.role === 'kitchen_cook_prep' && r.role === 'kitchen_cook') ||
+            (slot.role === 'customer_service' && r.role === 'floor_staff') ||
+            (slot.role === 'floor_staff' && r.role === 'customer_service')
+          )
+        })
+
+        if (!candidates.length) continue
+
+        // Score each candidate
+        const scored = candidates.map(m => {
+          const roles   = rolesByUser[m.id] ?? []
+          const roleMatch = roles.find(r =>
+            r.role === slot.role ||
+            (slot.role === 'kitchen_cook' && r.role === 'kitchen_cook_prep') ||
+            (slot.role === 'customer_service' && r.role === 'floor_staff') ||
+            (slot.role === 'floor_staff' && r.role === 'customer_service')
+          )
+          const skill    = roleMatch?.skill_level ?? 1
+          const isSchool = !!(m as any).is_school_student
+          let score = skill
+
+          if (isAfternoonCS) {
+            // Check school kid has a template for this day (available from their school finish time)
+            const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
+            const availFrom = tmpl ? parseInt(tmpl.start_time.split(':')[0]) * 60 + parseInt(tmpl.start_time.split(':')[1]) : 15 * 60 + 30
+            if (slot.startMin < availFrom) return { m, score: -999 } // not available yet
+            if (isSchool) score += 20 // strongly prefer school kids for afternoon CS
+          } else {
+            if (isSchool && slot.startMin < 15 * 60) return { m, score: -999 } // school kids can't work mornings
+          }
+
+          return { m, score }
+        }).filter(x => x.score > -900).sort((a, b) => b.score - a.score)
+
+        if (!scored.length) continue
+
+        const winner = scored[0].m
+        assignedToday.add(winner.id)
+
+        const bestRole = (rolesByUser[winner.id] ?? []).find(r =>
+          r.role === slot.role ||
+          (slot.role === 'customer_service' && r.role === 'floor_staff')
+        )?.role ?? slot.role
+
+        next[`${winner.id}_${dateStr}`] = {
+          start_time: start, end_time: end,
+          role: bestRole,
+          notes: slot.label ?? undefined,
+        }
+      }
+    })
+
+    setShifts(next)
+    setHasRoster(true)
+    setPublished(false)
+  }
+
   const dailyTotals = useMemo(() => weekDates.map(date => {
     const ds = toDateStr(date)
     return staff.reduce((s, m) => { const sh = shifts[`${m.id}_${ds}`]; return s + (sh ? calcHours(sh.start_time, sh.end_time) : 0) }, 0)
@@ -441,10 +529,16 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         </div>
         <div className="flex gap-2 flex-wrap">
           {!hasRoster ? (
-            <button onClick={createRoster}
-              className="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 font-medium">
-              Create roster
-            </button>
+            <div className="flex gap-2">
+              <button onClick={createRoster}
+                className="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 font-medium">
+                Create from templates
+              </button>
+              <button onClick={autoFill}
+                className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 font-medium">
+                Auto-fill from requirements
+              </button>
+            </div>
           ) : (
             <>
               <button onClick={saveAsTemplate} disabled={savingTmpl}
