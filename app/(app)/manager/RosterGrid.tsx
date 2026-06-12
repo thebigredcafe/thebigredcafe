@@ -276,7 +276,10 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   }
 
   async function markUnavailable(userId: string, date: string) {
-    await supabase.from('unavailability').upsert({ user_id: userId, date, reason: 'unavailable' }, { onConflict: 'user_id,date' })
+    await Promise.all([
+      supabase.from('unavailability').upsert({ user_id: userId, date, reason: 'unavailable' }, { onConflict: 'user_id,date' }),
+      supabase.from('roster_shifts').delete().eq('user_id', userId).eq('date', date),
+    ])
     setUnavailSet(s => new Set([...s, `${userId}_${date}`]))
     setShift(userId, date, null)
     setEditKey(null)
