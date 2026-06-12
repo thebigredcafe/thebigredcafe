@@ -222,6 +222,20 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   }
 
   const [refreshing, setRefreshing] = useState(false)
+  const [clearing, setClearing] = useState(false)
+
+  async function clearRoster() {
+    if (!confirm('Clear all shifts for this week? This cannot be undone.')) return
+    setClearing(true)
+    const start = toDateStr(weekStart)
+    const end = toDateStr(addDays(weekStart, 5))
+    await supabase.from('roster_shifts').delete().gte('date', start).lte('date', end)
+    setShifts({})
+    setHasRoster(false)
+    setPublished(false)
+    setEditKey(null)
+    setClearing(false)
+  }
 
   async function refreshWeek() {
     setRefreshing(true)
@@ -560,6 +574,10 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                   {publishing ? 'Publishing…' : 'Publish roster'}
                 </button>
               )}
+              <button onClick={clearRoster} disabled={clearing}
+                className="px-4 py-1.5 border border-red-200 text-red-500 rounded-lg text-sm hover:bg-red-50 hover:border-red-300 disabled:opacity-50">
+                {clearing ? 'Clearing…' : 'Clear roster'}
+              </button>
             </>
           )}
         </div>
