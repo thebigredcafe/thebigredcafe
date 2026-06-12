@@ -144,6 +144,30 @@ export default function RequirementsBuilder() {
     setReqs(prev => ({ ...prev, [day]: from.map(s => ({ ...s, id: uid() })) }))
   }
 
+  function copyToNext() {
+    const idx = DAYS.indexOf(day as any)
+    if (idx < 0 || idx >= DAYS.length - 1) return
+    const slots = reqs[day] ?? []
+    if (!slots.length) return
+    const nextDay = DAYS[idx + 1]
+    setReqs(prev => ({ ...prev, [nextDay]: slots.map(s => ({ ...s, id: uid() })) }))
+    setDay(nextDay)
+  }
+
+  function copyToAllRemaining() {
+    const idx = DAYS.indexOf(day as any)
+    if (idx < 0 || idx >= DAYS.length - 1) return
+    const slots = reqs[day] ?? []
+    if (!slots.length) return
+    setReqs(prev => {
+      const next = { ...prev }
+      for (let i = idx + 1; i < DAYS.length; i++) {
+        next[DAYS[i]] = slots.map(s => ({ ...s, id: uid() }))
+      }
+      return next
+    })
+  }
+
   function clearDay() {
     setReqs(prev => ({ ...prev, [day]: [] }))
   }
@@ -158,36 +182,63 @@ export default function RequirementsBuilder() {
         </div>
       </div>
 
-      {/* Day tabs */}
-      <div className="flex gap-1 mb-6">
-        {DAYS.map(d => (
-          <button key={d} onClick={() => setDay(d)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              day === d ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}>
-            {d}
-          </button>
-        ))}
+      {/* Day tabs with slot-count indicators */}
+      <div className="flex gap-1 mb-4">
+        {DAYS.map(d => {
+          const count = reqs[d]?.length ?? 0
+          return (
+            <button key={d} onClick={() => setDay(d)}
+              className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                day === d ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}>
+              {d}
+              {count > 0 && (
+                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                  day === d ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                }`}>{count}</span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <button onClick={() => setAdding(true)}
           className="px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800">
           + Add shift slot
         </button>
-        <div className="flex items-center gap-1 ml-2">
-          <span className="text-xs text-gray-400">Copy from:</span>
-          {DAYS.filter(d => d !== day && (reqs[d]?.length ?? 0) > 0).map(d => (
-            <button key={d} onClick={() => copyDay(d)}
-              className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 text-gray-600">
-              {d}
+
+        {/* Copy actions — only show when current day has slots */}
+        {daySlots.length > 0 && DAYS.indexOf(day as any) < DAYS.length - 1 && (
+          <>
+            <button onClick={copyToNext}
+              className="px-3 py-1.5 border border-gray-200 text-sm rounded-lg text-gray-600 hover:bg-gray-50 flex items-center gap-1">
+              Copy to {DAYS[DAYS.indexOf(day as any) + 1]} →
             </button>
-          ))}
-        </div>
+            <button onClick={copyToAllRemaining}
+              className="px-3 py-1.5 border border-gray-200 text-sm rounded-lg text-gray-600 hover:bg-gray-50">
+              Copy to all remaining days
+            </button>
+          </>
+        )}
+
+        {/* Copy from another day */}
+        {DAYS.filter(d => d !== day && (reqs[d]?.length ?? 0) > 0).length > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-400">Copy from:</span>
+            {DAYS.filter(d => d !== day && (reqs[d]?.length ?? 0) > 0).map(d => (
+              <button key={d} onClick={() => copyDay(d)}
+                className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50 text-gray-600">
+                {d}
+              </button>
+            ))}
+          </div>
+        )}
+
         {daySlots.length > 0 && (
           <button onClick={clearDay}
-            className="ml-auto text-xs text-red-500 hover:text-red-700 hover:underline">
+            className="ml-auto text-xs text-red-400 hover:text-red-600 hover:underline">
             Clear {day}
           </button>
         )}
