@@ -11,11 +11,11 @@ const SNAP = 15 // snap to 15-minute increments
 const MIN_DURATION = 30
 
 const ROLE_STYLE: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  barista:           { bg: 'bg-red-200',    border: 'border-red-400',    text: 'text-red-900',    label: 'Barista' },
-  customer_service:  { bg: 'bg-yellow-200', border: 'border-yellow-400', text: 'text-yellow-900', label: 'CS / Floor' },
+  barista:           { bg: 'bg-red-100',    border: 'border-red-300',    text: 'text-red-900',    label: 'Barista' },
+  customer_service:  { bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-900', label: 'CS / Floor' },
   kitchen_cook:      { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen' },
-  kitchen_cook_prep: { bg: 'bg-sky-100',    border: 'border-sky-300',    text: 'text-sky-900',    label: 'Prep / Dishes' },
-  dishwasher:        { bg: 'bg-slate-100',  border: 'border-slate-300',  text: 'text-slate-700',  label: 'Dishwasher' },
+  kitchen_cook_prep: { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen Prep' },
+  dishwasher:        { bg: 'bg-sky-100',    border: 'border-sky-300',    text: 'text-sky-900',    label: 'Dishwasher' },
 }
 const ROLE_OPTIONS = Object.entries(ROLE_STYLE).map(([v, s]) => ({ value: v, ...s }))
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
