@@ -65,6 +65,7 @@ const ROLE_COLOR: Record<string, { bg: string; border: string; text: string; lab
   kitchen_cook:      { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen' },
   kitchen_cook_prep: { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen' },
   dishwasher:        { bg: 'bg-sky-100',    border: 'border-sky-300',    text: 'text-sky-900',    label: 'Dishes' },
+  cs_dish:           { bg: 'bg-purple-100', border: 'border-purple-400', text: 'text-purple-900', label: 'CS + Dish' },
   new_staff:         { bg: 'bg-green-100',  border: 'border-green-300',  text: 'text-green-900',  label: 'New staff' },
   split:             { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-900', label: 'Split' },
 }
@@ -306,6 +307,37 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   }
 
   // ── Auto-fill from Requirements ──────────────────────────────────────────
+
+  // Split a long requirement bar into human-sized segments.
+  // Target: 5–6h per person. Kitchen can go up to 9h but prefer to split too.
+  function splitToSegments(role: string, startMin: number, endMin: number) {
+    const isKitchen = role === 'kitchen_cook' || role === 'kitchen_cook_prep'
+    const softMax   = 6 * 60   // 6 hours — prefer not to exceed
+    const hardMax   = isKitchen ? 9 * 60 : 6 * 60
+    const target    = isKitchen ? 7 * 60 : 5.5 * 60  // aim for 7h kitchen, 5.5h other
+    const duration  = endMin - startMin
+
+    if (duration <= softMax) return [{ startMin, endMin }]
+
+    const segments: { startMin: number; endMin: number }[] = []
+    let cur = startMin
+    while (cur < endMin) {
+      const remaining = endMin - cur
+      if (remaining <= hardMax) {
+        segments.push({ startMin: cur, endMin })
+        break
+      }
+      // Snap split point to nearest 30 min, aiming for target duration
+      let split = cur + target
+      split = Math.round(split / 30) * 30
+      // Don't leave a rump shift shorter than 2.5h
+      if (endMin - split < 2.5 * 60) split = cur + Math.round((remaining / 2) / 30) * 30
+      segments.push({ startMin: cur, endMin: split })
+      cur = split
+    }
+    return segments
+  }
+
   function autoFill() {
     let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
     try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
@@ -316,55 +348,68 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     const next: Record<string, ShiftData> = {}
 
     weekDates.forEach((date, di) => {
-      const dayName = DAYS[di] as string
-      const slots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
-      if (!slots.length) return
+      const dayName  = DAYS[di] as string
+      const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
+      if (!rawSlots.length) return
 
       const dateStr = toDateStr(date)
       const assignedToday = new Set<string>()
 
-      for (const slot of slots) {
-        const start = minToTime(slot.startMin)
-        const end   = minToTime(slot.endMin)
-        const isAfternoonCS = (slot.role === 'customer_service' || slot.role === 'floor_staff') && slot.startMin >= 14 * 60
+      // Expand any long bars into multiple segments before assigning
+      const segments = rawSlots.flatMap(slot =>
+        splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
+      )
 
-        // Candidate staff: has the role skill, not unavailable, not already assigned today
+      const roleMatches = (staffRole: string, reqRole: string) =>
+        staffRole === reqRole ||
+        (reqRole === 'kitchen_cook'      && staffRole === 'kitchen_cook_prep') ||
+        (reqRole === 'kitchen_cook_prep' && staffRole === 'kitchen_cook') ||
+        (reqRole === 'customer_service'  && staffRole === 'floor_staff') ||
+        (reqRole === 'floor_staff'       && staffRole === 'customer_service')
+
+      // cs_dish: staff must have BOTH a CS/floor role AND dishwasher
+      const canDoCsDish = (m: typeof staff[0]) => {
+        const roles = (rolesByUser[m.id] ?? []).map(r => r.role)
+        const hasCS   = roles.some(r => r === 'customer_service' || r === 'floor_staff')
+        const hasDish = roles.some(r => r === 'dishwasher')
+        return hasCS && hasDish
+      }
+
+      for (const seg of segments) {
+        const isCsDish     = seg.role === 'cs_dish'
+        const isAfternoonCS = (seg.role === 'customer_service' || seg.role === 'floor_staff' || isCsDish) && seg.startMin >= 14 * 60
+
         const candidates = staff.filter(m => {
           if (assignedToday.has(m.id)) return false
           if (unavailSet.has(`${m.id}_${dateStr}`)) return false
-          const roles = rolesByUser[m.id] ?? []
-          return roles.some(r =>
-            r.role === slot.role ||
-            (slot.role === 'kitchen_cook' && r.role === 'kitchen_cook_prep') ||
-            (slot.role === 'kitchen_cook_prep' && r.role === 'kitchen_cook') ||
-            (slot.role === 'customer_service' && r.role === 'floor_staff') ||
-            (slot.role === 'floor_staff' && r.role === 'customer_service')
-          )
+          if (isCsDish) return canDoCsDish(m)
+          return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, seg.role))
         })
 
         if (!candidates.length) continue
 
-        // Score each candidate
         const scored = candidates.map(m => {
-          const roles   = rolesByUser[m.id] ?? []
-          const roleMatch = roles.find(r =>
-            r.role === slot.role ||
-            (slot.role === 'kitchen_cook' && r.role === 'kitchen_cook_prep') ||
-            (slot.role === 'customer_service' && r.role === 'floor_staff') ||
-            (slot.role === 'floor_staff' && r.role === 'customer_service')
-          )
-          const skill    = roleMatch?.skill_level ?? 1
+          let skill = 1
+          if (isCsDish) {
+            const csMatch   = (rolesByUser[m.id] ?? []).find(r => r.role === 'customer_service' || r.role === 'floor_staff')
+            const dishMatch = (rolesByUser[m.id] ?? []).find(r => r.role === 'dishwasher')
+            skill = Math.min(csMatch?.skill_level ?? 1, dishMatch?.skill_level ?? 1)
+          } else {
+            const roleMatch = (rolesByUser[m.id] ?? []).find(r => roleMatches(r.role, seg.role))
+            skill = roleMatch?.skill_level ?? 1
+          }
           const isSchool = !!(m as any).is_school_student
           let score = skill
 
           if (isAfternoonCS) {
-            // Check school kid has a template for this day (available from their school finish time)
-            const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
-            const availFrom = tmpl ? parseInt(tmpl.start_time.split(':')[0]) * 60 + parseInt(tmpl.start_time.split(':')[1]) : 15 * 60 + 30
-            if (slot.startMin < availFrom) return { m, score: -999 } // not available yet
-            if (isSchool) score += 20 // strongly prefer school kids for afternoon CS
+            const tmpl      = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
+            const availFrom = tmpl
+              ? parseInt(tmpl.start_time.split(':')[0]) * 60 + parseInt(tmpl.start_time.split(':')[1])
+              : 15 * 60 + 30
+            if (seg.startMin < availFrom) return { m, score: -999 }
+            if (isSchool) score += 20
           } else {
-            if (isSchool && slot.startMin < 15 * 60) return { m, score: -999 } // school kids can't work mornings
+            if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
           }
 
           return { m, score }
@@ -375,15 +420,19 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         const winner = scored[0].m
         assignedToday.add(winner.id)
 
-        const bestRole = (rolesByUser[winner.id] ?? []).find(r =>
-          r.role === slot.role ||
-          (slot.role === 'customer_service' && r.role === 'floor_staff')
-        )?.role ?? slot.role
+        // cs_dish shows as dishwasher on the roster (they'll also cover CS/floor)
+        let bestRole: string
+        if (isCsDish) {
+          bestRole = 'dishwasher'
+        } else {
+          bestRole = (rolesByUser[winner.id] ?? []).find(r => roleMatches(r.role, seg.role))?.role ?? seg.role
+        }
 
         next[`${winner.id}_${dateStr}`] = {
-          start_time: start, end_time: end,
-          role: bestRole,
-          notes: slot.label ?? undefined,
+          start_time: minToTime(seg.startMin),
+          end_time:   minToTime(seg.endMin),
+          role:       bestRole,
+          notes:      isCsDish ? 'CS + Dish' : (seg.label ?? undefined),
         }
       }
     })

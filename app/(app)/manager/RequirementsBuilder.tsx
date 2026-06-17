@@ -16,6 +16,7 @@ const ROLE_STYLE: Record<string, { bg: string; border: string; text: string; lab
   kitchen_cook:      { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen' },
   kitchen_cook_prep: { bg: 'bg-blue-200',   border: 'border-blue-400',   text: 'text-blue-900',   label: 'Kitchen Prep' },
   dishwasher:        { bg: 'bg-sky-100',    border: 'border-sky-300',    text: 'text-sky-900',    label: 'Dishwasher' },
+  cs_dish:           { bg: 'bg-purple-100', border: 'border-purple-400', text: 'text-purple-900', label: 'CS + Dish' },
 }
 const ROLE_OPTIONS = Object.entries(ROLE_STYLE).map(([v, s]) => ({ value: v, ...s }))
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
