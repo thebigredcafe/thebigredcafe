@@ -313,42 +313,6 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       }
     }
 
-    // ── Phase 2: fill remaining capacity from templates, preference order 5→1 ──
-    const staffByPref = [...staff].sort((a, b) =>
-      (b.preference ?? 3) - (a.preference ?? 3) || (b.min_hours_week ?? 0) - (a.min_hours_week ?? 0)
-    )
-
-    for (const m of staffByPref) {
-      const maxH = getMax(m)
-      if (weeklyHours[m.id] >= maxH) continue
-
-      for (let di = 0; di < 6; di++) {
-        const dateStr = toDateStr(weekDates[di])
-        if (assignedDays.has(`${m.id}_${dateStr}`)) continue
-        if (unavailSet.has(`${m.id}_${dateStr}`)) continue
-
-        const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === DAYS[di])
-        if (!tmpl?.start_time) continue
-
-        const isSchool = !!m.is_school_student
-        const startMins = timeToMins(tmpl.start_time)
-        if (isSchool && di < 5 && startMins < 14 * 60) continue
-
-        const shiftHours = (timeToMins(tmpl.end_time) - startMins) / 60
-        if (weeklyHours[m.id] + shiftHours > maxH + 0.5) continue
-
-        const memberRoles = (rolesByUser[m.id] ?? []).slice().sort((a, b) => b.skill_level - a.skill_level)
-        if (!memberRoles.length) continue
-
-        next[`${m.id}_${dateStr}`] = {
-          start_time: tmpl.start_time,
-          end_time:   tmpl.end_time,
-          role:       memberRoles[0].role,
-        }
-        assignedDays.add(`${m.id}_${dateStr}`)
-        weeklyHours[m.id] += shiftHours
-      }
-    }
 
     setShifts(next)
     setHasRoster(true)
