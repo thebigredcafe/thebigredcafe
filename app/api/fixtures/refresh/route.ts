@@ -37,7 +37,7 @@ export async function POST() {
       if (team.sport === 'soccer' && team.ssfa_club_id) {
         fixtures = await fetchSsfaFixtures(team.ssfa_club_id, team.ssfa_age_group_id, team.ssfa_label ?? '')
       } else if (team.sport === 'rugby' && team.prl_competition_id) {
-        fixtures = await fetchPrlFixtures(team.prl_competition_id, team.prl_team_id, team.name)
+        fixtures = await fetchPrlFixtures(team.prl_competition_id, team.prl_team_id)
       } else if (team.sport === 'netball' && team.playhq_team_id) {
         fixtures = await fetchPlayHQFixtures(team.playhq_team_id)
       }

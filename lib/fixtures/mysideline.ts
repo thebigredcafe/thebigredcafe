@@ -1,12 +1,10 @@
-// Scrapes fixture data from MySideline (PRL rugby league)
-// The page is server-rendered with competition data
-
-import * as cheerio from 'cheerio'
+// Scrapes PRL MySideline fixture data from the RSC payload embedded in the page HTML.
+// The competition page server-renders a `matches` array inside the __next_f RSC chunks.
 
 interface PrlFixture {
-  date: string
+  date: string      // YYYY-MM-DD
   round: number
-  kickoff: string | null
+  kickoff: string | null  // HH:MM 24h, null when not yet published
   homeTeam: string
   awayTeam: string
   venue: string
@@ -15,75 +13,69 @@ interface PrlFixture {
 
 export async function fetchPrlFixtures(
   competitionId: number,
-  teamId: number,
-  teamName: string
+  teamId: number
 ): Promise<PrlFixture[]> {
-  const url = `https://prl.mysideline.com.au/competitions/${competitionId}?filter=teams&team=${teamId}`
+  const url = `https://prl.mysideline.com.au/competitions/${competitionId}?filter=fixtures&team=${teamId}`
 
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml',
+      Accept: 'text/html',
     },
     next: { revalidate: 0 },
   })
 
   if (!res.ok) throw new Error(`MySideline fetch failed: ${res.status}`)
-
   const html = await res.text()
-  const $ = cheerio.load(html)
-  const fixtures: PrlFixture[] = []
 
-  // Try to find embedded JSON data
-  $('script[type="application/json"], script[id*="data"], script[id*="fixture"]').each((_, el) => {
-    try {
-      const text = $(el).text().trim()
-      if (!text) return
-      const data = JSON.parse(text)
-      const items = data?.fixtures ?? data?.data?.fixtures ?? data?.games ?? []
-      for (const f of items) {
-        fixtures.push({
-          date: f.date ?? f.matchDate ?? '',
-          round: f.round ?? f.roundNumber ?? 0,
-          kickoff: f.kickoff ?? f.time ?? null,
-          homeTeam: f.homeTeam ?? f.home ?? '',
-          awayTeam: f.awayTeam ?? f.away ?? '',
-          venue: f.venue ?? f.ground ?? '',
-          isHome: (f.homeTeam ?? f.home ?? '').toLowerCase().includes(
-            teamName.toLowerCase().split(' ')[0]
-          ),
-        })
-      }
-    } catch {
-      // skip
-    }
+  // Decode all __next_f RSC chunks and join
+  const chunks = [...html.matchAll(/self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g)].map(m => {
+    try { return JSON.parse('"' + m[1] + '"') } catch { return m[1] }
   })
+  const rsc = chunks.join('')
 
-  // Try to find base64-encoded data (same pattern as SSFA)
-  if (fixtures.length === 0) {
-    const b64Regex = /data-page="([A-Za-z0-9+/=]{100,})"/g
-    let match: RegExpExecArray | null
-    while ((match = b64Regex.exec(html)) !== null) {
-      try {
-        const decoded = Buffer.from(match[1], 'base64').toString('utf-8')
-        const data = JSON.parse(decoded)
-        const items = data?.fixtures ?? data?.games ?? []
-        for (const f of items) {
-          fixtures.push({
-            date: f.date ?? f.fixture_date ?? '',
-            round: f.round ?? f.round_number ?? 0,
-            kickoff: f.kickoff ?? f.kickoff_time ?? null,
-            homeTeam: f.homeTeam ?? f.home_team_name ?? '',
-            awayTeam: f.awayTeam ?? f.away_team_name ?? '',
-            venue: f.venue ?? f.venue_name ?? '',
-            isHome: false,
-          })
-        }
-      } catch {
-        // skip
-      }
-    }
+  // Find and parse the matches array
+  const matchesStart = rsc.indexOf('"matches":')
+  if (matchesStart === -1) return []
+
+  const slice = rsc.slice(matchesStart + '"matches":'.length)
+  let depth = 0, end = 0
+  for (let i = 0; i < slice.length; i++) {
+    if (slice[i] === '[') depth++
+    else if (slice[i] === ']') { depth--; if (depth === 0) { end = i + 1; break } }
+  }
+  if (!end) return []
+
+  let matches: any[]
+  try {
+    matches = JSON.parse(slice.slice(0, end))
+  } catch {
+    return []
   }
 
-  return fixtures
+  return matches
+    .filter(m => m.homeTeam?._id === teamId || m.awayTeam?._id === teamId)
+    .map(m => {
+      const venueTimezone = m.fullVenue?.venueTimezone ?? m.venue?.venueTimezone ?? 'Australia/Sydney'
+      const dt = new Date(m.dateTime)
+
+      // Convert to local date string YYYY-MM-DD
+      const date = dt.toLocaleDateString('en-CA', { timeZone: venueTimezone })
+
+      // Convert to HH:MM — treat early-morning times (< 06:00) as unpublished
+      const localHour = parseInt(dt.toLocaleString('en-AU', { timeZone: venueTimezone, hour: 'numeric', hour12: false }))
+      const kickoff = (m.meta?.isTba || localHour < 6)
+        ? null
+        : dt.toLocaleTimeString('en-GB', { timeZone: venueTimezone, hour: '2-digit', minute: '2-digit' })
+
+      return {
+        date,
+        round: m.round?.number ?? 0,
+        kickoff,
+        homeTeam: m.homeTeam?.name ?? '',
+        awayTeam: m.awayTeam?.name ?? '',
+        venue: m.fullVenue?.name ?? m.venue?.name ?? '',
+        isHome: m.homeTeam?._id === teamId,
+      }
+    })
 }

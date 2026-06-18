@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Start-Sleep *)",
+      "PowerShell(npx tsc *)",
+      "PowerShell(taskkill *)",
+      "PowerShell(cd C:\\Users\\thebi\\cafe-roster; npm run dev)",
+      "PowerShell(cd C:\\Users\\thebi\\cafe-roster; node scripts/rebuild-rosters.mjs)",
+      "PowerShell(cd C:\\Users\\thebi\\cafe-roster; taskkill *)",
+      "PowerShell(cd C:\\Users\\thebi\\cafe-roster; npx tsc *)",
+      "PowerShell(cd C:\\Users\\thebi\\cafe-roster; git *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__get_page_text",
+      "mcp__Claude_in_Chrome__read_page"
+    ]
+  }
+}

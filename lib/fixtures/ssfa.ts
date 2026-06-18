@@ -1,10 +1,10 @@
-// Scrapes fixture data from SSFA mycompapp
-// The page embeds base64-encoded JSON in script tags
+// Scrapes SSFA fixture data from the Livewire PowerGrid table.
+// Rows are rendered as wire:key="row-{rowId}-{column}-0" with a <div> value inside.
 
 interface SsfaFixture {
-  date: string
+  date: string      // YYYY-MM-DD
   round: number
-  kickoff: string | null
+  kickoff: string | null  // HH:MM 24h
   homeTeam: string
   awayTeam: string
   venue: string
@@ -27,39 +27,46 @@ export async function fetchSsfaFixtures(
   })
 
   if (!res.ok) throw new Error(`SSFA fetch failed: ${res.status}`)
-
   const html = await res.text()
 
-  // Extract base64-encoded JSON blobs from the page
+  // Extract all unique row IDs from wire:key="row-{id}-{column}-0"
+  const rowIds = [...new Set(
+    [...html.matchAll(/wire:key="row-(\d+)-/g)].map(m => m[1])
+  )]
+
+  if (rowIds.length === 0) return []
+
   const fixtures: SsfaFixture[] = []
-  const b64Regex = /data-page="([A-Za-z0-9+/=]+)"/g
-  let match: RegExpExecArray | null
 
-  while ((match = b64Regex.exec(html)) !== null) {
-    try {
-      const decoded = Buffer.from(match[1], 'base64').toString('utf-8')
-      const data = JSON.parse(decoded)
-      if (data?.fixtures) {
-        for (const f of data.fixtures) {
-          const teamInvolved =
-            f.home_team_name?.includes(teamLabel) ||
-            f.away_team_name?.includes(teamLabel)
-          if (!teamInvolved) continue
-
-          fixtures.push({
-            date: f.fixture_date,
-            round: f.round_number ?? 0,
-            kickoff: f.kickoff_time ?? null,
-            homeTeam: f.home_team_name ?? '',
-            awayTeam: f.away_team_name ?? '',
-            venue: f.venue_name ?? '',
-            isHome: f.home_team_name?.includes(teamLabel) ?? false,
-          })
-        }
-      }
-    } catch {
-      // skip non-JSON blobs
+  for (const rowId of rowIds) {
+    const col = (column: string) => {
+      const regex = new RegExp(`wire:key="row-${rowId}-${column}-0"[^>]*>[\\s\\S]*?<div[^>]*>([^<]*)<\\/div>`)
+      return html.match(regex)?.[1]?.trim() ?? ''
     }
+
+    const home = col('home_team\\.name\\.plain')
+    const away = col('away_team\\.name\\.plain')
+
+    // Only keep rows involving this team
+    if (!home.includes(teamLabel) && !away.includes(teamLabel)) continue
+
+    // Parse date from DD/MM/YYYY → YYYY-MM-DD
+    const rawDate = col('date')
+    const dateParts = rawDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+    const date = dateParts ? `${dateParts[3]}-${dateParts[2]}-${dateParts[1]}` : ''
+
+    const startTime = col('start_time') || null
+    const roundVal = col('round')
+
+    fixtures.push({
+      date,
+      round: parseInt(roundVal) || 0,
+      kickoff: startTime,
+      homeTeam: home,
+      awayTeam: away,
+      venue: col('field\\.plain'),
+      isHome: home.includes(teamLabel),
+    })
   }
 
   return fixtures
