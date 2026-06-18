@@ -876,40 +876,35 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          {!hasRoster ? (
-            <div className="flex gap-2 flex-wrap">
-              <button onClick={buildRoster}
-                className="px-4 py-1.5 bg-green-700 text-white rounded-lg text-sm hover:bg-green-800 font-medium">
-                Build roster
-              </button>
-            </div>
-          ) : (
-            <>
-              <button onClick={saveAsTemplate} disabled={savingTmpl}
-                className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-                {savedTmpl ? '✓ Template saved' : savingTmpl ? 'Saving…' : 'Save as template'}
-              </button>
-              <button onClick={saveRoster} disabled={saving}
-                className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-                {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save'}
-              </button>
-              {published ? (
-                <button onClick={unpublishRoster}
-                  className="px-4 py-1.5 border border-green-300 bg-green-50 text-green-700 rounded-lg text-sm hover:bg-green-100">
-                  Unpublish
+          <>
+            <button onClick={buildRoster}
+              className="px-4 py-1.5 bg-green-700 text-white rounded-lg text-sm hover:bg-green-800 font-medium">
+              Build roster
+            </button>
+            {hasRoster && (
+              <>
+                <button onClick={saveRoster} disabled={saving}
+                  className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+                  {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save'}
                 </button>
-              ) : (
-                <button onClick={publishRoster} disabled={publishing}
-                  className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 font-medium">
-                  {publishing ? 'Publishing…' : 'Publish roster'}
+                {published ? (
+                  <button onClick={unpublishRoster}
+                    className="px-4 py-1.5 border border-green-300 bg-green-50 text-green-700 rounded-lg text-sm hover:bg-green-100">
+                    Unpublish
+                  </button>
+                ) : (
+                  <button onClick={publishRoster} disabled={publishing}
+                    className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 font-medium">
+                    {publishing ? 'Publishing…' : 'Publish roster'}
+                  </button>
+                )}
+                <button onClick={clearRoster} disabled={clearing}
+                  className="px-4 py-1.5 border border-red-200 text-red-500 rounded-lg text-sm hover:bg-red-50 hover:border-red-300 disabled:opacity-50">
+                  {clearing ? 'Clearing…' : 'Clear roster'}
                 </button>
-              )}
-              <button onClick={clearRoster} disabled={clearing}
-                className="px-4 py-1.5 border border-red-200 text-red-500 rounded-lg text-sm hover:bg-red-50 hover:border-red-300 disabled:opacity-50">
-                {clearing ? 'Clearing…' : 'Clear roster'}
-              </button>
-            </>
-          )}
+              </>
+            )}
+          </>
         </div>
       </div>
 
