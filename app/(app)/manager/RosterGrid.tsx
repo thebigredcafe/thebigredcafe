@@ -14,6 +14,9 @@ interface StaffMember {
   is_school_student?: boolean
   sport_team_id?: string
   sport_teams?: { name: string; sport: string } | null
+  min_hours_week?: number | null
+  max_hours_week?: number | null
+  preference?: number | null
 }
 
 interface StaffRole { user_id: string; role: Role; skill_level: number }
@@ -196,6 +199,115 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     setPublished(false)
   }
 
+  // ── Build roster from min hours + skills + preference ────────────────────
+  function buildRoster() {
+    const timeToMins = (t: string) => {
+      const [h, m] = t.split(':').map(Number)
+      return h * 60 + m
+    }
+
+    // Build candidate list: every (staff, day) combo where a template exists
+    type Slot = {
+      memberId: string
+      dateStr: string
+      di: number
+      startTime: string
+      endTime: string
+      bestRole: string
+      bestSkill: number
+      hours: number
+    }
+
+    const slots: Slot[] = []
+    for (const m of staff) {
+      for (let di = 0; di < 6; di++) {
+        const dateStr = toDateStr(weekDates[di])
+        if (unavailSet.has(`${m.id}_${dateStr}`)) continue
+        const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === DAYS[di])
+        if (!tmpl?.start_time) continue
+
+        const isSchool = !!m.is_school_student
+        const startMins = timeToMins(tmpl.start_time)
+        // School kids can't work weekday mornings
+        if (isSchool && di < 5 && startMins < 14 * 60) continue
+
+        const memberRoles = (rolesByUser[m.id] ?? []).slice().sort((a, b) => b.skill_level - a.skill_level)
+        if (!memberRoles.length) continue
+        const best = memberRoles[0]
+
+        const hours = (timeToMins(tmpl.end_time) - startMins) / 60
+        slots.push({
+          memberId: m.id, dateStr, di,
+          startTime: tmpl.start_time, endTime: tmpl.end_time,
+          bestRole: best.role, bestSkill: best.skill_level,
+          hours: Math.max(hours, 0),
+        })
+      }
+    }
+
+    const next: Record<string, ShiftData> = {}
+    const assignedDays = new Set<string>()   // `${memberId}_${dateStr}`
+    const hoursGiven: Record<string, number> = {}
+    for (const m of staff) hoursGiven[m.id] = 0
+
+    const getMax = (m: StaffMember) => (m.max_hours_week && m.max_hours_week > 0) ? m.max_hours_week : 40
+    const getMin = (m: StaffMember) => m.min_hours_week ?? 0
+    const getPref = (m: StaffMember) => m.preference ?? 3
+
+    const assign = (slot: Slot) => {
+      const key = `${slot.memberId}_${slot.dateStr}`
+      if (assignedDays.has(key)) return
+      const m = staff.find(x => x.id === slot.memberId)!
+      if (hoursGiven[slot.memberId] + slot.hours > getMax(m) + 0.5) return
+      next[key] = { start_time: slot.startTime, end_time: slot.endTime, role: slot.bestRole }
+      assignedDays.add(key)
+      hoursGiven[slot.memberId] += slot.hours
+    }
+
+    // ── Phase 1: hit minimum hours ──────────────────────────────────────────
+    // Repeatedly pick the staff member furthest below their minimum and
+    // assign their highest-skill available slot for the day.
+    let progress = true
+    while (progress) {
+      progress = false
+      // Find staff still below minimum, sorted by deficit descending
+      const needMin = staff
+        .filter(m => hoursGiven[m.id] < getMin(m))
+        .map(m => ({ m, deficit: getMin(m) - hoursGiven[m.id] }))
+        .sort((a, b) => b.deficit - a.deficit || b.m.preference! - a.m.preference!)
+
+      for (const { m } of needMin) {
+        // Best unassigned slot for this person (highest skill, no day conflict)
+        const best = slots
+          .filter(s => s.memberId === m.id && !assignedDays.has(`${s.memberId}_${s.dateStr}`))
+          .sort((a, b) => b.bestSkill - a.bestSkill)[0]
+        if (!best) continue
+        assign(best)
+        progress = true
+        break // restart loop so deficits are recalculated
+      }
+    }
+
+    // ── Phase 2: fill remaining by preference ───────────────────────────────
+    const remaining = slots
+      .filter(s => !assignedDays.has(`${s.memberId}_${s.dateStr}`))
+      .map(s => {
+        const m = staff.find(x => x.id === s.memberId)!
+        return { s, pref: getPref(m), skill: s.bestSkill }
+      })
+      .sort((a, b) => b.pref - a.pref || b.skill - a.skill)
+
+    for (const { s } of remaining) {
+      const m = staff.find(x => x.id === s.memberId)!
+      if (hoursGiven[s.memberId] >= getMax(m)) continue
+      assign(s)
+    }
+
+    setShifts(next)
+    setHasRoster(true)
+    setPublished(false)
+  }
+
   async function saveRoster() {
     setSaving(true)
     const rows = Object.entries(shifts).map(([key, d]) => {
@@ -308,13 +420,27 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
   // ── Auto-fill from Requirements ──────────────────────────────────────────
 
-  // Read active preferences in priority order
-  function loadPreferences(): string[] {
+  // Read structured rules (cafeRules_v1). Falls back to old text prefs for backward compat.
+  function loadActiveRules(): import('./RuleBuilder').Rule[] {
     try {
-      const raw = localStorage.getItem('cafePreferences_v1')
-      if (!raw) return []
-      const prefs = JSON.parse(raw) as { text: string; enabled: boolean }[]
-      return prefs.filter(p => p.enabled).map(p => p.text.toLowerCase())
+      const raw = localStorage.getItem('cafeRules_v1')
+      if (raw) {
+        const parsed = JSON.parse(raw) as import('./RuleBuilder').Rule[]
+        return parsed.filter(r => r.enabled)
+      }
+      // Backward compat: read old text prefs and convert to rule signals
+      const oldRaw = localStorage.getItem('cafePreferences_v1')
+      if (!oldRaw) return []
+      const oldPrefs = JSON.parse(oldRaw) as { text: string; enabled: boolean }[]
+      const texts = oldPrefs.filter(p => p.enabled).map(p => p.text.toLowerCase())
+      const rules: import('./RuleBuilder').Rule[] = []
+      if (texts.some(p => p.includes('junior')))
+        rules.push({ id: 'compat_1', enabled: true, type: 'prefer_group', group: 'school', role: 'any', day: 'any' })
+      if (texts.some(p => p.includes('4 star') || (p.includes('kitchen') && p.includes('till 2'))))
+        rules.push({ id: 'compat_2', enabled: true, type: 'require_skill', role: 'kitchen_cook', skillMin: 4, timeCondition: 'until', timeValue: '14:00' })
+      if (texts.some(p => p.includes('wage') || p.includes('save')))
+        rules.push({ id: 'compat_3', enabled: true, type: 'prefer_cost', costDir: 'cheaper' })
+      return rules
     } catch { return [] }
   }
 
@@ -352,10 +478,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
     try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
 
-    const activePref = loadPreferences()
-    const prefJuniors   = activePref.some(p => p.includes('junior'))
-    const prefWages     = activePref.some(p => p.includes('wage') || p.includes('save'))
-    const prefKitchen4  = activePref.some(p => p.includes('4 star') || p.includes('4star') || p.includes('kitchen') && p.includes('till 2'))
+    const activeRules = loadActiveRules()
 
     const minToTime = (m: number) =>
       `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
@@ -369,8 +492,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
       const dateStr = toDateStr(date)
       const assignedToday = new Set<string>()
+      const hoursAssignedToday = new Map<string, number>()
 
-      // Expand any long bars into multiple segments before assigning
       const segments = rawSlots.flatMap(slot =>
         splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
       )
@@ -382,31 +505,42 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         (reqRole === 'customer_service'  && staffRole === 'floor_staff') ||
         (reqRole === 'floor_staff'       && staffRole === 'customer_service')
 
-      // cs_dish: staff must have BOTH a CS/floor role AND dishwasher
       const canDoCsDish = (m: typeof staff[0]) => {
         const roles = (rolesByUser[m.id] ?? []).map(r => r.role)
-        const hasCS   = roles.some(r => r === 'customer_service' || r === 'floor_staff')
-        const hasDish = roles.some(r => r === 'dishwasher')
-        return hasCS && hasDish
+        return roles.some(r => r === 'customer_service' || r === 'floor_staff')
+          && roles.some(r => r === 'dishwasher')
       }
 
+      const ruleRoleOk = (ruleRole: string | undefined, segRole: string) =>
+        !ruleRole || ruleRole === 'any' || ruleRole === segRole ||
+        (ruleRole === 'kitchen_cook' && (segRole === 'kitchen_cook' || segRole === 'kitchen_cook_prep')) ||
+        (ruleRole === 'customer_service' && (segRole === 'customer_service' || segRole === 'floor_staff' || segRole === 'cs_dish'))
+
+      const ruleDayOk = (ruleDay: string | undefined) =>
+        !ruleDay || ruleDay === 'any' || ruleDay === dayName
+
       for (const seg of segments) {
-        const isCsDish     = seg.role === 'cs_dish'
+        const isCsDish      = seg.role === 'cs_dish'
         const isAfternoonCS = (seg.role === 'customer_service' || seg.role === 'floor_staff' || isCsDish) && seg.startMin >= 14 * 60
+        const segMins       = seg.endMin - seg.startMin
+
+        const avoidedToday = new Set<string>(
+          activeRules
+            .filter(r => r.type === 'avoid_day' && ruleDayOk(r.day) && r.staffId)
+            .map(r => r.staffId!)
+        )
 
         const candidates = staff.filter(m => {
           if (assignedToday.has(m.id)) return false
           if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          if (avoidedToday.has(m.id)) return false
+          const maxRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
+          if (maxRule?.maxHours && (hoursAssignedToday.get(m.id) ?? 0) + segMins > maxRule.maxHours * 60) return false
           if (isCsDish) return canDoCsDish(m)
           return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, seg.role))
         })
 
         if (!candidates.length) continue
-
-        // "4 star kitchen till 2" — for kitchen slots ending at/after 14:00, require skill >= 4
-        const needsKitchen4 = prefKitchen4
-          && (seg.role === 'kitchen_cook' || seg.role === 'kitchen_cook_prep')
-          && seg.endMin >= 14 * 60
 
         const scored = candidates.map(m => {
           let skill = 1
@@ -421,29 +555,48 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           const isSchool = !!(m as any).is_school_student
           let score = skill
 
-          // Preference: Need a 4 star kitchen cook on till 2 — exclude anyone below skill 4
-          if (needsKitchen4 && skill < 4) return { m, score: -999 }
+          for (const rule of activeRules) {
+            switch (rule.type) {
+              case 'require_skill': {
+                if (!ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day)) break
+                const tVal = rule.timeValue
+                  ? parseInt(rule.timeValue.split(':')[0]) * 60 + parseInt(rule.timeValue.split(':')[1])
+                  : 0
+                const applies =
+                  rule.timeCondition === 'until' ? seg.endMin >= tVal :
+                  rule.timeCondition === 'from'  ? seg.startMin >= tVal : true
+                if (applies && skill < (rule.skillMin ?? 1)) return { m, score: -999 }
+                break
+              }
+              case 'prefer_group': {
+                if (!ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day)) break
+                if (rule.group === 'school' && isSchool) score += 30
+                if (rule.group === 'senior' && !isSchool) score += 30
+                break
+              }
+              case 'prefer_cost': {
+                const rate = isSchool ? 15 : ((m as any).hourly_rate ?? 25)
+                if (rule.costDir === 'cheaper') score -= (rate - 15) * 0.3
+                else score += (rate - 15) * 0.2
+                break
+              }
+              case 'prefer_staff': {
+                if (m.id !== rule.staffId || !ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day)) break
+                score += 25
+                break
+              }
+            }
+          }
 
+          // School availability constraint (always enforced regardless of rules)
           if (isAfternoonCS) {
             const tmpl      = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
             const availFrom = tmpl
               ? parseInt(tmpl.start_time.split(':')[0]) * 60 + parseInt(tmpl.start_time.split(':')[1])
               : 15 * 60 + 30
             if (seg.startMin < availFrom) return { m, score: -999 }
-            // Preference: Use Juniors when available — boost school kids for CS
-            if (isSchool) score += prefJuniors ? 40 : 20
           } else {
             if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
-            // Preference: Use Juniors when available — boost school kids for any afternoon slot
-            if (isSchool && prefJuniors && seg.startMin >= 12 * 60) score += 15
-          }
-
-          // Preference: Save wages — prefer lower hourly rate (subtract a fraction of rate from score)
-          if (prefWages) {
-            const rate = (m as any).is_school_student
-              ? 15  // school kids are cheapest — give them a boost
-              : ((m as any).hourly_rate ?? 25)
-            score -= (rate - 15) * 0.3  // penalise higher rates gently
           }
 
           return { m, score }
@@ -453,6 +606,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
         const winner = scored[0].m
         assignedToday.add(winner.id)
+        hoursAssignedToday.set(winner.id, (hoursAssignedToday.get(winner.id) ?? 0) + segMins)
 
         // cs_dish shows as dishwasher on the roster (they'll also cover CS/floor)
         let bestRole: string
@@ -626,10 +780,14 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         </div>
         <div className="flex gap-2 flex-wrap">
           {!hasRoster ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={buildRoster}
+                className="px-4 py-1.5 bg-green-700 text-white rounded-lg text-sm hover:bg-green-800 font-medium">
+                Build roster
+              </button>
               <button onClick={createRoster}
                 className="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 font-medium">
-                Create from templates
+                From templates
               </button>
               <button onClick={autoFill}
                 className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 font-medium">

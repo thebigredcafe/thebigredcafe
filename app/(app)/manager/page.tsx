@@ -35,7 +35,7 @@ export default async function ManagerPage() {
     { data: templates },
   ] = await Promise.all([
     supabase.from('profiles')
-      .select('id, full_name, hourly_rate, saturday_rate, is_school_student, sport_team_id, sport_teams ( id, name, sport )')
+      .select('id, full_name, hourly_rate, saturday_rate, is_school_student, sport_team_id, min_hours_week, max_hours_week, preference, sport_teams ( id, name, sport )')
       .eq('role', 'staff')
       .order('full_name'),
     supabase.from('staff_roles').select('user_id, role, skill_level'),
