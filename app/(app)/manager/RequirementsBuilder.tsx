@@ -21,7 +21,7 @@ const ROLE_STYLE: Record<string, { bg: string; border: string; text: string; lab
 const ROLE_OPTIONS = Object.entries(ROLE_STYLE).map(([v, s]) => ({ value: v, ...s }))
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
 
-const STORAGE_KEY = 'cafeRequirements_v1'
+const STORAGE_KEY = 'cafeRequirements_v1' // kept as local cache fallback
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Slot = { id: string; role: string; startMin: number; endMin: number; label?: string }
@@ -51,13 +51,36 @@ const minToTime = (m: number) =>
 const TICKS = Array.from({ length: 14 }, (_, i) => T_START + i * 60).filter(m => m <= T_END)
 
 // ── Load / save ──────────────────────────────────────────────────────────────
-function loadReqs(): Reqs {
+function loadLocalReqs(): Reqs {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') } catch { return {} }
 }
-function saveReqs(r: Reqs) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)) }
+function saveLocalReqs(r: Reqs) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)) } catch {}
+}
 
-// Export for roster auto-fill
-export function getStoredRequirements(): Reqs { return loadReqs() }
+async function loadDbReqs(): Promise<Reqs> {
+  try {
+    const res = await fetch('/api/requirements')
+    if (!res.ok) return {}
+    const rows: { day_of_week: string; role: string; start_min: number; end_min: number; label?: string; id: string }[] = await res.json()
+    const reqs: Reqs = {}
+    for (const r of rows) {
+      if (!reqs[r.day_of_week]) reqs[r.day_of_week] = []
+      reqs[r.day_of_week].push({ id: r.id, role: r.role, startMin: r.start_min, endMin: r.end_min, label: r.label })
+    }
+    return reqs
+  } catch { return {} }
+}
+
+async function saveDbReqs(r: Reqs) {
+  const rows = Object.entries(r).flatMap(([day, slots]) =>
+    (slots ?? []).map(s => ({ day_of_week: day, role: s.role, start_min: s.startMin, end_min: s.endMin, label: s.label ?? null }))
+  )
+  await fetch('/api/requirements', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rows) })
+}
+
+// Export for roster auto-fill (reads localStorage cache, which is kept in sync)
+export function getStoredRequirements(): Reqs { return loadLocalReqs() }
 export function reqToShiftTime(slot: Slot): { start_time: string; end_time: string } {
   return { start_time: minToTime(slot.startMin), end_time: minToTime(slot.endMin) }
 }
@@ -66,16 +89,39 @@ export function reqToShiftTime(slot: Slot): { start_time: string; end_time: stri
 export default function RequirementsBuilder() {
   const [reqs, setReqs]     = useState<Reqs>({})
   const [day,  setDay]      = useState<string>('Mon')
-  const [drag, setDrag]     = useState<DragState | null>(null)
-  const [adding, setAdding] = useState(false)
+  const [drag, setDrag]       = useState<DragState | null>(null)
+  const [adding, setAdding]   = useState(false)
   const [addForm, setAddForm] = useState({ role: 'barista', start: '05:45', end: '11:00', label: '' })
-  const timelineRef = useRef<HTMLDivElement>(null)
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
+  const saveTimer             = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timelineRef           = useRef<HTMLDivElement>(null)
 
-  // Load from localStorage on mount
-  useEffect(() => { setReqs(loadReqs()) }, [])
+  // Load from DB on mount, fall back to localStorage while loading
+  useEffect(() => {
+    const local = loadLocalReqs()
+    if (Object.keys(local).length) setReqs(local)
+    loadDbReqs().then(db => {
+      if (Object.keys(db).length) {
+        setReqs(db)
+        saveLocalReqs(db)
+      }
+    })
+  }, [])
 
-  // Save whenever reqs change
-  useEffect(() => { if (Object.keys(reqs).length) saveReqs(reqs) }, [reqs])
+  // Debounced save to DB whenever reqs change (1.5s after last change)
+  useEffect(() => {
+    if (!Object.keys(reqs).length) return
+    saveLocalReqs(reqs)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      setSaving(true)
+      await saveDbReqs(reqs)
+      setSaving(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }, 1500)
+  }, [reqs])
 
   const daySlots = (reqs[day] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
 
@@ -180,6 +226,9 @@ export default function RequirementsBuilder() {
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Daily Requirements</h1>
           <p className="text-sm text-gray-500 mt-0.5">Set the shifts you need filled each day. The roster auto-fill will match staff to these.</p>
+        </div>
+        <div className="text-xs text-gray-400">
+          {saving ? 'Saving…' : saved ? '✓ Saved' : ''}
         </div>
       </div>
 

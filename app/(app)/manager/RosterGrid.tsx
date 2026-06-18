@@ -474,9 +474,24 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     return segments
   }
 
-  function autoFill() {
+  async function autoFill() {
     let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
-    try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
+    try {
+      const res = await fetch('/api/requirements')
+      if (res.ok) {
+        const rows: { day_of_week: string; role: string; start_min: number; end_min: number; label?: string }[] = await res.json()
+        for (const r of rows) {
+          if (!reqs[r.day_of_week]) reqs[r.day_of_week] = []
+          reqs[r.day_of_week].push({ role: r.role, startMin: r.start_min, endMin: r.end_min, label: r.label })
+        }
+      } else {
+        // fallback to localStorage
+        reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}')
+      }
+    } catch {
+      try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
+    }
+    if (!Object.keys(reqs).length) return
 
     const activeRules = loadActiveRules()
 
@@ -530,12 +545,23 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             .map(r => r.staffId!)
         )
 
+        const minShiftRule = activeRules.find(r => r.type === 'min_shift')
+        const minShiftMins        = (minShiftRule?.minHours ?? 2) * 60
+        const juniorMinShiftMins  = (minShiftRule?.juniorMinHours ?? 1.5) * 60
+        const juniorOnlyIfCheaper = minShiftRule?.juniorOnlyIfCheaper ?? true
+
         const candidates = staff.filter(m => {
           if (assignedToday.has(m.id)) return false
           if (unavailSet.has(`${m.id}_${dateStr}`)) return false
           if (avoidedToday.has(m.id)) return false
           const maxRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
           if (maxRule?.maxHours && (hoursAssignedToday.get(m.id) ?? 0) + segMins > maxRule.maxHours * 60) return false
+          const isSchool = !!(m as any).is_school_student
+          // Minimum shift length enforcement
+          if (minShiftRule) {
+            const threshold = isSchool ? juniorMinShiftMins : minShiftMins
+            if (segMins < threshold) return false
+          }
           if (isCsDish) return canDoCsDish(m)
           return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, seg.role))
         })
@@ -604,7 +630,19 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
         if (!scored.length) continue
 
-        const winner = scored[0].m
+        // If "juniors only if cheaper" is active, don't pick a school kid when a
+        // non-school candidate with equal or better score exists
+        let finalScored = scored
+        if (minShiftRule && juniorOnlyIfCheaper) {
+          const topScore = scored[0].score
+          const nonSchoolTop = scored.find(x => !(x.m as any).is_school_student && x.score >= topScore - 5)
+          if (nonSchoolTop && (scored[0].m as any).is_school_student) {
+            finalScored = scored.filter(x => !(x.m as any).is_school_student)
+            if (!finalScored.length) finalScored = scored
+          }
+        }
+
+        const winner = finalScored[0].m
         assignedToday.add(winner.id)
         hoursAssignedToday.set(winner.id, (hoursAssignedToday.get(winner.id) ?? 0) + segMins)
 
