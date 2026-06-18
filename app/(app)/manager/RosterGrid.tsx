@@ -249,30 +249,10 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
       if (!rawSlots.length) continue
 
-      // Merge overlapping/adjacent bars of the same role so no two people
-      // cover the same hour for the same role (1 person per role per time slot).
-      const mergedByRole: typeof rawSlots = []
-      const byRole: Record<string, typeof rawSlots> = {}
-      for (const s of rawSlots) {
-        if (!byRole[s.role]) byRole[s.role] = []
-        byRole[s.role].push(s)
-      }
-      for (const [, slots] of Object.entries(byRole)) {
-        const sorted = slots.slice().sort((a, b) => a.startMin - b.startMin)
-        let cur = { ...sorted[0] }
-        for (let i = 1; i < sorted.length; i++) {
-          if (sorted[i].startMin <= cur.endMin) {
-            cur.endMin = Math.max(cur.endMin, sorted[i].endMin)
-          } else {
-            mergedByRole.push(cur)
-            cur = { ...sorted[i] }
-          }
-        }
-        mergedByRole.push(cur)
-      }
-      mergedByRole.sort((a, b) => a.startMin - b.startMin)
-
-      const segments = mergedByRole.flatMap(slot =>
+      // Each bar = exactly 1 staff member needed for that time range.
+      // Two overlapping barista bars = 2 baristas working simultaneously.
+      // Process each bar independently, assigning one person per bar.
+      const segments = rawSlots.flatMap(slot =>
         splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
       )
 
