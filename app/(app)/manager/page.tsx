@@ -40,17 +40,16 @@ export default async function ManagerPage() {
     supabase.from('shift_templates').select('*'),
   ])
 
-  const teamIds = [...new Set((staff ?? []).map((s: any) => s.sport_team_id).filter(Boolean))] as string[]
-  const { data: fixtures } = teamIds.length > 0
-    ? await supabase.from('fixture_cache').select('team_id, date, kickoff')
-        .in('team_id', teamIds).gte('date', new Date().toISOString().split('T')[0])
-    : { data: [] }
-
-  // Load current week's shifts server-side so the page renders pre-filled
   const { start, end } = getWeekRange()
-  const [{ data: initialShifts }, { data: unavailability }] = await Promise.all([
+  const today = new Date().toISOString().split('T')[0]
+  const teamIds = [...new Set((staff ?? []).map((s: any) => s.sport_team_id).filter(Boolean))] as string[]
+
+  const [{ data: initialShifts }, { data: unavailability }, { data: fixtures }] = await Promise.all([
     supabase.from('roster_shifts').select('*').gte('date', start).lte('date', end),
     supabase.from('unavailability').select('user_id, date').gte('date', start).lte('date', end),
+    teamIds.length > 0
+      ? supabase.from('fixture_cache').select('team_id, date, kickoff').in('team_id', teamIds).gte('date', today)
+      : Promise.resolve({ data: [] }),
   ])
 
   return (
