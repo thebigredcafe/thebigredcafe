@@ -278,7 +278,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             const availFrom = tmpl ? timeToMins(tmpl.start_time) : 15 * 60 + 30
             if (seg.startMin < availFrom) return { m, score: -999 }
           } else {
-            if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
+            if (isSchool && di < 5 && seg.startMin < 15 * 60) return { m, score: -999 }
           }
 
           let skill = 1
@@ -633,7 +633,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
               : 15 * 60 + 30
             if (seg.startMin < availFrom) return { m, score: -999 }
           } else {
-            if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
+            if (isSchool && di < 5 && seg.startMin < 15 * 60) return { m, score: -999 }
           }
 
           return { m, score }
