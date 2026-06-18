@@ -308,6 +308,16 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
   // ── Auto-fill from Requirements ──────────────────────────────────────────
 
+  // Read active preferences in priority order
+  function loadPreferences(): string[] {
+    try {
+      const raw = localStorage.getItem('cafePreferences_v1')
+      if (!raw) return []
+      const prefs = JSON.parse(raw) as { text: string; enabled: boolean }[]
+      return prefs.filter(p => p.enabled).map(p => p.text.toLowerCase())
+    } catch { return [] }
+  }
+
   // Split a long requirement bar into human-sized segments.
   // Target: 5–6h per person. Kitchen can go up to 9h but prefer to split too.
   function splitToSegments(role: string, startMin: number, endMin: number) {
@@ -341,6 +351,11 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
   function autoFill() {
     let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
     try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { return }
+
+    const activePref = loadPreferences()
+    const prefJuniors   = activePref.some(p => p.includes('junior'))
+    const prefWages     = activePref.some(p => p.includes('wage') || p.includes('save'))
+    const prefKitchen4  = activePref.some(p => p.includes('4 star') || p.includes('4star') || p.includes('kitchen') && p.includes('till 2'))
 
     const minToTime = (m: number) =>
       `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
@@ -388,6 +403,11 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
         if (!candidates.length) continue
 
+        // "4 star kitchen till 2" — for kitchen slots ending at/after 14:00, require skill >= 4
+        const needsKitchen4 = prefKitchen4
+          && (seg.role === 'kitchen_cook' || seg.role === 'kitchen_cook_prep')
+          && seg.endMin >= 14 * 60
+
         const scored = candidates.map(m => {
           let skill = 1
           if (isCsDish) {
@@ -401,15 +421,29 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           const isSchool = !!(m as any).is_school_student
           let score = skill
 
+          // Preference: Need a 4 star kitchen cook on till 2 — exclude anyone below skill 4
+          if (needsKitchen4 && skill < 4) return { m, score: -999 }
+
           if (isAfternoonCS) {
             const tmpl      = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
             const availFrom = tmpl
               ? parseInt(tmpl.start_time.split(':')[0]) * 60 + parseInt(tmpl.start_time.split(':')[1])
               : 15 * 60 + 30
             if (seg.startMin < availFrom) return { m, score: -999 }
-            if (isSchool) score += 20
+            // Preference: Use Juniors when available — boost school kids for CS
+            if (isSchool) score += prefJuniors ? 40 : 20
           } else {
             if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
+            // Preference: Use Juniors when available — boost school kids for any afternoon slot
+            if (isSchool && prefJuniors && seg.startMin >= 12 * 60) score += 15
+          }
+
+          // Preference: Save wages — prefer lower hourly rate (subtract a fraction of rate from score)
+          if (prefWages) {
+            const rate = (m as any).is_school_student
+              ? 15  // school kids are cheapest — give them a boost
+              : ((m as any).hourly_rate ?? 25)
+            score -= (rate - 15) * 0.3  // penalise higher rates gently
           }
 
           return { m, score }
