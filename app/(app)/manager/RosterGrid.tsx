@@ -835,14 +835,6 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
                 className="px-4 py-1.5 bg-green-700 text-white rounded-lg text-sm hover:bg-green-800 font-medium">
                 Build roster
               </button>
-              <button onClick={createRoster}
-                className="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 font-medium">
-                From templates
-              </button>
-              <button onClick={autoFill}
-                className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 font-medium">
-                Auto-fill from requirements
-              </button>
             </div>
           ) : (
             <>
