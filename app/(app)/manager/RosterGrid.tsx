@@ -635,6 +635,18 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     return staff.reduce((s, m) => { const sh = shifts[`${m.id}_${ds}`]; return s + (sh ? calcHours(sh.start_time, sh.end_time) : 0) }, 0)
   }), [weekDates, staff, shifts])
 
+  const dailyCosts = useMemo(() => weekDates.map((date, di) => {
+    const ds = toDateStr(date)
+    const isSat = di === 5
+    return staff.reduce((s, m) => {
+      const sh = shifts[`${m.id}_${ds}`]
+      if (!sh) return s
+      const hrs = calcHours(sh.start_time, sh.end_time)
+      const rate = isSat ? (m.saturday_rate ?? m.hourly_rate ?? 0) : (m.hourly_rate ?? 0)
+      return s + hrs * rate
+    }, 0)
+  }), [weekDates, staff, shifts])
+
   // Coverage check per day
   const dailyCoverage = useMemo(() => weekDates.map((date, di) => {
     const ds = toDateStr(date)
@@ -937,14 +949,26 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             </tr>
             {/* Hours total row */}
             <tr className="bg-gray-50 border-t border-gray-200">
-              <td className="px-3 py-2 sticky left-0 bg-gray-50 font-medium text-gray-500">Total</td>
+              <td className="px-3 py-2 sticky left-0 bg-gray-50 font-medium text-gray-500">Total hrs</td>
               {dailyTotals.map((t, i) => (
                 <td key={i} className="text-center px-2 py-2 font-semibold text-gray-700">
-                  {t > 0 ? t.toFixed(2) : '–'}
+                  {t > 0 ? t.toFixed(1) : '–'}
                 </td>
               ))}
               <td className="text-center px-3 py-2 font-bold text-gray-900">
-                {dailyTotals.reduce((a, b) => a + b, 0).toFixed(2)}
+                {dailyTotals.reduce((a, b) => a + b, 0).toFixed(1)}
+              </td>
+            </tr>
+            {/* Daily cost row */}
+            <tr className="bg-green-50 border-t border-green-200">
+              <td className="px-3 py-2 sticky left-0 bg-green-50 font-medium text-green-800">Cost ($)</td>
+              {dailyCosts.map((c, i) => (
+                <td key={i} className="text-center px-2 py-2 font-semibold text-green-700">
+                  {c > 0 ? `$${c.toFixed(0)}` : '–'}
+                </td>
+              ))}
+              <td className="text-center px-3 py-2 font-bold text-green-900">
+                ${dailyCosts.reduce((a, b) => a + b, 0).toFixed(0)}
               </td>
             </tr>
           </tfoot>
