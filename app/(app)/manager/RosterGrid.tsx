@@ -199,108 +199,152 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     setPublished(false)
   }
 
-  // ── Build roster from min hours + skills + preference ────────────────────
-  function buildRoster() {
-    const timeToMins = (t: string) => {
-      const [h, m] = t.split(':').map(Number)
-      return h * 60 + m
+  // ── Build roster: Phase 1 = requirements-driven (min hours first), Phase 2 = preference fill ──
+  async function buildRoster() {
+    // Load requirements from API (fall back to localStorage)
+    let reqs: Record<string, { role: string; startMin: number; endMin: number; label?: string }[]> = {}
+    try {
+      const res = await fetch('/api/requirements')
+      if (res.ok) {
+        const rows: { day_of_week: string; role: string; start_min: number; end_min: number; label?: string }[] = await res.json()
+        for (const r of rows) {
+          if (!reqs[r.day_of_week]) reqs[r.day_of_week] = []
+          reqs[r.day_of_week].push({ role: r.role, startMin: r.start_min, endMin: r.end_min, label: r.label })
+        }
+      } else {
+        reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}')
+      }
+    } catch {
+      try { reqs = JSON.parse(localStorage.getItem('cafeRequirements_v1') ?? '{}') } catch { /**/ }
     }
 
-    // Build candidate list: every (staff, day) combo where a template exists
-    type Slot = {
-      memberId: string
-      dateStr: string
-      di: number
-      startTime: string
-      endTime: string
-      bestRole: string
-      bestSkill: number
-      hours: number
+    const minToTime = (mins: number) =>
+      `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
+    const timeToMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+
+    const next: Record<string, ShiftData> = {}
+    const assignedDays = new Set<string>()   // `${memberId}_${dateStr}`
+    const weeklyHours: Record<string, number> = {}
+    for (const m of staff) weeklyHours[m.id] = 0
+
+    const getMax = (m: StaffMember) => (m.max_hours_week && m.max_hours_week > 0) ? m.max_hours_week : 40
+    const getMin = (m: StaffMember) => m.min_hours_week ?? 0
+
+    const roleMatches = (staffRole: string, reqRole: string) =>
+      staffRole === reqRole ||
+      (reqRole === 'kitchen_cook'      && staffRole === 'kitchen_cook_prep') ||
+      (reqRole === 'kitchen_cook_prep' && staffRole === 'kitchen_cook') ||
+      (reqRole === 'customer_service'  && staffRole === 'floor_staff') ||
+      (reqRole === 'floor_staff'       && staffRole === 'customer_service')
+
+    const canDoCsDish = (m: StaffMember) => {
+      const roles = (rolesByUser[m.id] ?? []).map(r => r.role)
+      return roles.some(r => r === 'customer_service' || r === 'floor_staff') && roles.some(r => r === 'dishwasher')
     }
 
-    const slots: Slot[] = []
-    for (const m of staff) {
+    // ── Phase 1: fill each requirement slot, boosting staff furthest below minimum ──
+    for (let di = 0; di < 6; di++) {
+      const dayName = DAYS[di] as string
+      const dateStr = toDateStr(weekDates[di])
+      const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
+      if (!rawSlots.length) continue
+
+      const segments = rawSlots.flatMap(slot =>
+        splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
+      )
+
+      for (const seg of segments) {
+        const isCsDish = seg.role === 'cs_dish'
+        const isAfternoonCS = (seg.role === 'customer_service' || seg.role === 'floor_staff' || isCsDish) && seg.startMin >= 14 * 60
+        const segHours = (seg.endMin - seg.startMin) / 60
+
+        const candidates = staff.filter(m => {
+          if (assignedDays.has(`${m.id}_${dateStr}`)) return false
+          if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          if (weeklyHours[m.id] + segHours > getMax(m) + 0.5) return false
+          if (isCsDish) return canDoCsDish(m)
+          return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, seg.role))
+        })
+        if (!candidates.length) continue
+
+        const scored = candidates.map(m => {
+          const isSchool = !!m.is_school_student
+          // School availability constraint
+          if (isAfternoonCS) {
+            const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
+            const availFrom = tmpl ? timeToMins(tmpl.start_time) : 15 * 60 + 30
+            if (seg.startMin < availFrom) return { m, score: -999 }
+          } else {
+            if (isSchool && seg.startMin < 15 * 60) return { m, score: -999 }
+          }
+
+          let skill = 1
+          if (isCsDish) {
+            const csMatch   = (rolesByUser[m.id] ?? []).find(r => r.role === 'customer_service' || r.role === 'floor_staff')
+            const dishMatch = (rolesByUser[m.id] ?? []).find(r => r.role === 'dishwasher')
+            skill = Math.min(csMatch?.skill_level ?? 1, dishMatch?.skill_level ?? 1)
+          } else {
+            skill = (rolesByUser[m.id] ?? []).find(r => roleMatches(r.role, seg.role))?.skill_level ?? 1
+          }
+
+          // Boost staff furthest below their minimum — this is the Phase 1 priority
+          const deficit = Math.max(0, getMin(m) - weeklyHours[m.id])
+          return { m, score: skill * 10 + deficit * 3 }
+        }).filter(x => x.score > -900).sort((a, b) => b.score - a.score)
+
+        if (!scored.length) continue
+
+        const winner = scored[0].m
+        const bestRole = isCsDish
+          ? 'dishwasher'
+          : ((rolesByUser[winner.id] ?? []).find(r => roleMatches(r.role, seg.role))?.role ?? seg.role)
+
+        next[`${winner.id}_${dateStr}`] = {
+          start_time: minToTime(seg.startMin),
+          end_time:   minToTime(seg.endMin),
+          role:       bestRole,
+          notes:      isCsDish ? 'CS + Dish' : (seg.label ?? undefined),
+        }
+        assignedDays.add(`${winner.id}_${dateStr}`)
+        weeklyHours[winner.id] += segHours
+      }
+    }
+
+    // ── Phase 2: fill remaining capacity from templates, preference order 5→1 ──
+    const staffByPref = [...staff].sort((a, b) =>
+      (b.preference ?? 3) - (a.preference ?? 3) || (b.min_hours_week ?? 0) - (a.min_hours_week ?? 0)
+    )
+
+    for (const m of staffByPref) {
+      const maxH = getMax(m)
+      if (weeklyHours[m.id] >= maxH) continue
+
       for (let di = 0; di < 6; di++) {
         const dateStr = toDateStr(weekDates[di])
+        if (assignedDays.has(`${m.id}_${dateStr}`)) continue
         if (unavailSet.has(`${m.id}_${dateStr}`)) continue
+
         const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === DAYS[di])
         if (!tmpl?.start_time) continue
 
         const isSchool = !!m.is_school_student
         const startMins = timeToMins(tmpl.start_time)
-        // School kids can't work weekday mornings
         if (isSchool && di < 5 && startMins < 14 * 60) continue
+
+        const shiftHours = (timeToMins(tmpl.end_time) - startMins) / 60
+        if (weeklyHours[m.id] + shiftHours > maxH + 0.5) continue
 
         const memberRoles = (rolesByUser[m.id] ?? []).slice().sort((a, b) => b.skill_level - a.skill_level)
         if (!memberRoles.length) continue
-        const best = memberRoles[0]
 
-        const hours = (timeToMins(tmpl.end_time) - startMins) / 60
-        slots.push({
-          memberId: m.id, dateStr, di,
-          startTime: tmpl.start_time, endTime: tmpl.end_time,
-          bestRole: best.role, bestSkill: best.skill_level,
-          hours: Math.max(hours, 0),
-        })
+        next[`${m.id}_${dateStr}`] = {
+          start_time: tmpl.start_time,
+          end_time:   tmpl.end_time,
+          role:       memberRoles[0].role,
+        }
+        assignedDays.add(`${m.id}_${dateStr}`)
+        weeklyHours[m.id] += shiftHours
       }
-    }
-
-    const next: Record<string, ShiftData> = {}
-    const assignedDays = new Set<string>()   // `${memberId}_${dateStr}`
-    const hoursGiven: Record<string, number> = {}
-    for (const m of staff) hoursGiven[m.id] = 0
-
-    const getMax = (m: StaffMember) => (m.max_hours_week && m.max_hours_week > 0) ? m.max_hours_week : 40
-    const getMin = (m: StaffMember) => m.min_hours_week ?? 0
-    const getPref = (m: StaffMember) => m.preference ?? 3
-
-    const assign = (slot: Slot) => {
-      const key = `${slot.memberId}_${slot.dateStr}`
-      if (assignedDays.has(key)) return
-      const m = staff.find(x => x.id === slot.memberId)!
-      if (hoursGiven[slot.memberId] + slot.hours > getMax(m) + 0.5) return
-      next[key] = { start_time: slot.startTime, end_time: slot.endTime, role: slot.bestRole }
-      assignedDays.add(key)
-      hoursGiven[slot.memberId] += slot.hours
-    }
-
-    // ── Phase 1: hit minimum hours ──────────────────────────────────────────
-    // Repeatedly pick the staff member furthest below their minimum and
-    // assign their highest-skill available slot for the day.
-    let progress = true
-    while (progress) {
-      progress = false
-      // Find staff still below minimum, sorted by deficit descending
-      const needMin = staff
-        .filter(m => hoursGiven[m.id] < getMin(m))
-        .map(m => ({ m, deficit: getMin(m) - hoursGiven[m.id] }))
-        .sort((a, b) => b.deficit - a.deficit || b.m.preference! - a.m.preference!)
-
-      for (const { m } of needMin) {
-        // Best unassigned slot for this person (highest skill, no day conflict)
-        const best = slots
-          .filter(s => s.memberId === m.id && !assignedDays.has(`${s.memberId}_${s.dateStr}`))
-          .sort((a, b) => b.bestSkill - a.bestSkill)[0]
-        if (!best) continue
-        assign(best)
-        progress = true
-        break // restart loop so deficits are recalculated
-      }
-    }
-
-    // ── Phase 2: fill remaining by preference ───────────────────────────────
-    const remaining = slots
-      .filter(s => !assignedDays.has(`${s.memberId}_${s.dateStr}`))
-      .map(s => {
-        const m = staff.find(x => x.id === s.memberId)!
-        return { s, pref: getPref(m), skill: s.bestSkill }
-      })
-      .sort((a, b) => b.pref - a.pref || b.skill - a.skill)
-
-    for (const { s } of remaining) {
-      const m = staff.find(x => x.id === s.memberId)!
-      if (hoursGiven[s.memberId] >= getMax(m)) continue
-      assign(s)
     }
 
     setShifts(next)
