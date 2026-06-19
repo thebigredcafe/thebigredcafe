@@ -72,7 +72,7 @@ const RULE_TYPE_OPTIONS: { value: RuleType; label: string; description: string }
   { value: 'require_skill', label: 'Require skill',   description: 'Enforce a minimum skill level for a role and time' },
   { value: 'prefer_cost',   label: 'Prefer cheaper',  description: 'Prefer lower (or higher) wage staff when skill is equal' },
   { value: 'prefer_staff',  label: 'Prefer person',   description: 'Prefer a specific staff member for a role/day' },
-  { value: 'max_hours',      label: 'Hours (person)', description: 'Set min and max weekly hours for a staff member' },
+  { value: 'max_hours',      label: 'Hours (person)', description: 'Set min and max hours per shift (per day) for a staff member' },
   { value: 'max_role_hours', label: 'Hours (role)',   description: 'Set min and max daily hours for a specific role' },
   { value: 'avoid_day',      label: 'Avoid on day',       description: 'Never auto-assign a staff member on a given day' },
   { value: 'min_shift',     label: 'Min shift length', description: 'Minimum hours for a shift; school kids can be shorter but only if cheaper' },
@@ -241,7 +241,7 @@ function RuleFields({ rule, onChange, staff }: {
           <Num value={rule.minWeekHours ?? 0} onChange={v => onChange({ minWeekHours: v })} min={0} max={60} step={0.5} />
           <Lbl>h / max</Lbl>
           <Num value={rule.maxHours ?? 38} onChange={v => onChange({ maxHours: v })} min={0} max={60} step={0.5} />
-          <Lbl>h</Lbl>
+          <Lbl>h per day</Lbl>
         </div>
       )
 

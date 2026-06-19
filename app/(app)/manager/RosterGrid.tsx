@@ -312,7 +312,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           if (avoidedToday.has(m.id)) return false
           if (weeklyHours[m.id] + segHours > getMax(m) + 0.5) return false
           const personRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id && dayTypeOk(r.hoursDay))
-          if (personRule?.maxHours && personRule.maxHours > 0 && weeklyHours[m.id] + segHours > personRule.maxHours) return false
+          if (personRule?.minWeekHours && personRule.minWeekHours > 0 && segHours < personRule.minWeekHours) return false
+          if (personRule?.maxHours && personRule.maxHours > 0 && segHours > personRule.maxHours) return false
           const isSchool = !!m.is_school_student
           if (minShiftRule) {
             const threshold = isSchool ? juniorMinShiftMins : minShiftMins
@@ -346,8 +347,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           }
 
           // Base score: prioritise staff furthest below their minimum hours
-          const personRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id && dayTypeOk(r.hoursDay))
-          const effectiveMin = personRule?.minWeekHours ?? getMin(m)
+          const effectiveMin = getMin(m)
           const deficit = Math.max(0, effectiveMin - weeklyHours[m.id])
           let score = skill * 10 + deficit * 5
 
