@@ -222,6 +222,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
     const timeToMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
 
+    const activeRules = loadActiveRules()
+
     const next: Record<string, ShiftData> = {}
     const assignedDays = new Set<string>()   // `${memberId}_${dateStr}`
     const weeklyHours: Record<string, number> = {}
@@ -242,15 +244,32 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       return roles.some(r => r === 'customer_service' || r === 'floor_staff') && roles.some(r => r === 'dishwasher')
     }
 
-    // ── Phase 1: fill each requirement slot, boosting staff furthest below minimum ──
+    const ruleRoleOk = (ruleRole: string | undefined, segRole: string) =>
+      !ruleRole || ruleRole === 'any' || ruleRole === segRole ||
+      (ruleRole === 'kitchen_cook' && (segRole === 'kitchen_cook' || segRole === 'kitchen_cook_prep')) ||
+      (ruleRole === 'customer_service' && (segRole === 'customer_service' || segRole === 'floor_staff' || segRole === 'cs_dish'))
+
+    const ruleDayOk = (ruleDay: string | undefined, dayName: string) =>
+      !ruleDay || ruleDay === 'any' || ruleDay === dayName
+
+    const minShiftRule = activeRules.find(r => r.type === 'min_shift')
+    const minShiftMins       = (minShiftRule?.minHours ?? 0) * 60
+    const juniorMinShiftMins = (minShiftRule?.juniorMinHours ?? 0) * 60
+
+    // ── Fill each requirement slot, prioritising minimum hours then preferences ──
     for (let di = 0; di < 6; di++) {
       const dayName = DAYS[di] as string
       const dateStr = toDateStr(weekDates[di])
       const rawSlots = (reqs[dayName] ?? []).slice()
       if (!rawSlots.length) continue
 
+      const avoidedToday = new Set<string>(
+        activeRules
+          .filter(r => r.type === 'avoid_day' && ruleDayOk(r.day, dayName) && r.staffId)
+          .map(r => r.staffId!)
+      )
+
       // Sort by fewest qualified candidates first (most constrained slots filled first).
-      // This ensures rare roles like dishwasher aren't blocked by CS grabbing the only person.
       const countCandidates = (slot: typeof rawSlots[0]) => {
         const isCsDishSlot = slot.role === 'cs_dish'
         return staff.filter(m => {
@@ -265,11 +284,25 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         const isCsDish = seg.role === 'cs_dish'
         const isAfternoonCS = (seg.role === 'customer_service' || seg.role === 'floor_staff' || isCsDish) && seg.startMin >= 14 * 60
         const segHours = (seg.endMin - seg.startMin) / 60
+        const segMins  = seg.endMin - seg.startMin
+
+        const maxRoleRule = activeRules.find(r =>
+          r.type === 'max_role_hours' &&
+          (r.role === seg.role || (r.role === 'customer_service' && (seg.role === 'floor_staff' || seg.role === 'cs_dish')))
+        )
 
         const candidates = staff.filter(m => {
           if (assignedDays.has(`${m.id}_${dateStr}`)) return false
           if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          if (avoidedToday.has(m.id)) return false
           if (weeklyHours[m.id] + segHours > getMax(m) + 0.5) return false
+          const maxHoursRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
+          if (maxHoursRule?.maxHours && weeklyHours[m.id] + segHours > maxHoursRule.maxHours) return false
+          const isSchool = !!m.is_school_student
+          if (minShiftRule) {
+            const threshold = isSchool ? juniorMinShiftMins : minShiftMins
+            if (threshold > 0 && segMins < threshold) return false
+          }
           if (isCsDish) return canDoCsDish(m)
           return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, seg.role))
         })
@@ -277,7 +310,8 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
         const scored = candidates.map(m => {
           const isSchool = !!m.is_school_student
-          // School availability constraint
+
+          // Hard availability constraints
           if (isAfternoonCS) {
             const tmpl = templates.find(t => t.user_id === m.id && t.day_of_week === dayName)
             const availFrom = tmpl ? timeToMins(tmpl.start_time) : 15 * 60 + 30
@@ -286,6 +320,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             if (isSchool && di < 5 && seg.startMin < 15 * 60) return { m, score: -999 }
           }
 
+          // Skill level for the role
           let skill = 1
           if (isCsDish) {
             const csMatch   = (rolesByUser[m.id] ?? []).find(r => r.role === 'customer_service' || r.role === 'floor_staff')
@@ -295,9 +330,50 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
             skill = (rolesByUser[m.id] ?? []).find(r => roleMatches(r.role, seg.role))?.skill_level ?? 1
           }
 
-          // Boost staff furthest below their minimum — this is the Phase 1 priority
+          // Base score: prioritise staff furthest below their minimum hours
           const deficit = Math.max(0, getMin(m) - weeklyHours[m.id])
-          return { m, score: skill * 10 + deficit * 3 }
+          let score = skill * 10 + deficit * 5
+
+          // Apply preference rules
+          for (const rule of activeRules) {
+            switch (rule.type) {
+              case 'require_skill': {
+                if (!ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day, dayName)) break
+                const tVal = rule.timeValue
+                  ? parseInt(rule.timeValue.split(':')[0]) * 60 + parseInt(rule.timeValue.split(':')[1])
+                  : 0
+                const applies =
+                  rule.timeCondition === 'until' ? seg.endMin >= tVal :
+                  rule.timeCondition === 'from'  ? seg.startMin >= tVal : true
+                if (applies && skill < (rule.skillMin ?? 1)) return { m, score: -999 }
+                break
+              }
+              case 'prefer_group': {
+                if (!ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day, dayName)) break
+                if (rule.group === 'school' && isSchool) score += 30
+                if (rule.group === 'senior' && !isSchool) score += 30
+                break
+              }
+              case 'prefer_cost': {
+                const rate = isSchool ? 15 : (m.hourly_rate ?? 25)
+                if (rule.costDir === 'cheaper') score -= (rate - 15) * 0.3
+                else score += (rate - 15) * 0.2
+                break
+              }
+              case 'prefer_staff': {
+                if (m.id !== rule.staffId || !ruleRoleOk(rule.role, seg.role) || !ruleDayOk(rule.day, dayName)) break
+                score += 25
+                break
+              }
+              case 'max_role_hours': {
+                if (!maxRoleRule || !ruleRoleOk(rule.role, seg.role)) break
+                // Already enforced in candidates filter above
+                break
+              }
+            }
+          }
+
+          return { m, score }
         }).filter(x => x.score > -900).sort((a, b) => b.score - a.score)
 
         if (!scored.length) continue
