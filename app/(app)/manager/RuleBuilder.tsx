@@ -32,9 +32,11 @@ export interface Rule {
   staffId?: string
   minWeekHours?: number
   maxHours?: number
+  hoursDay?: 'any' | 'weekday' | 'weekend'
   // max_role_hours
   minRoleHours?: number
   maxRoleHours?: number
+  roleHoursDay?: 'any' | 'weekday' | 'weekend'
   // min_shift
   minHours?: number
   juniorMinHours?: number
@@ -83,8 +85,8 @@ function defaultForType(type: RuleType): Partial<Rule> {
     case 'require_skill': return { role: 'kitchen_cook', skillMin: 4, timeCondition: 'until', timeValue: '14:00', day: 'any' }
     case 'prefer_cost':   return { costDir: 'cheaper' }
     case 'prefer_staff':  return { staffId: '', role: 'any', day: 'any' }
-    case 'max_hours':      return { staffId: '', minWeekHours: 0, maxHours: 38 }
-    case 'max_role_hours': return { role: 'dishwasher', minRoleHours: 0, maxRoleHours: 8 }
+    case 'max_hours':      return { staffId: '', minWeekHours: 0, maxHours: 38, hoursDay: 'any' }
+    case 'max_role_hours': return { role: 'dishwasher', minRoleHours: 0, maxRoleHours: 8, roleHoursDay: 'any' }
     case 'avoid_day':     return { staffId: '', day: 'Mon' }
     case 'min_shift':     return { minHours: 2, juniorMinHours: 1.5, juniorOnlyIfCheaper: true }
     case 'note':          return { noteText: '' }
@@ -233,11 +235,13 @@ function RuleFields({ rule, onChange, staff }: {
       return (
         <div className="flex flex-wrap items-center gap-1.5">
           <Sel value={rule.staffId ?? ''} onChange={v => onChange({ staffId: v })} options={staffOptions} />
+          <Sel value={rule.hoursDay ?? 'any'} onChange={v => onChange({ hoursDay: v as Rule['hoursDay'] })}
+            options={[{ value: 'any', label: 'any days' }, { value: 'weekday', label: 'weekdays' }, { value: 'weekend', label: 'weekend' }]} />
           <Lbl>min</Lbl>
           <Num value={rule.minWeekHours ?? 0} onChange={v => onChange({ minWeekHours: v })} min={0} max={60} step={0.5} />
           <Lbl>h / max</Lbl>
           <Num value={rule.maxHours ?? 38} onChange={v => onChange({ maxHours: v })} min={0} max={60} step={0.5} />
-          <Lbl>h per week</Lbl>
+          <Lbl>h</Lbl>
         </div>
       )
 
@@ -245,6 +249,8 @@ function RuleFields({ rule, onChange, staff }: {
       return (
         <div className="flex flex-wrap items-center gap-1.5">
           <Sel value={rule.role ?? 'dishwasher'} onChange={v => onChange({ role: v })} options={ROLE_OPTIONS.filter(o => o.value !== 'any')} />
+          <Sel value={rule.roleHoursDay ?? 'any'} onChange={v => onChange({ roleHoursDay: v as Rule['roleHoursDay'] })}
+            options={[{ value: 'any', label: 'any days' }, { value: 'weekday', label: 'weekdays' }, { value: 'weekend', label: 'weekend' }]} />
           <Lbl>min</Lbl>
           <Num value={rule.minRoleHours ?? 0} onChange={v => onChange({ minRoleHours: v })} min={0} max={24} step={0.5} />
           <Lbl>h / max</Lbl>
