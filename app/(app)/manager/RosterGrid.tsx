@@ -246,12 +246,20 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     for (let di = 0; di < 6; di++) {
       const dayName = DAYS[di] as string
       const dateStr = toDateStr(weekDates[di])
-      const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
+      const rawSlots = (reqs[dayName] ?? []).slice()
       if (!rawSlots.length) continue
 
-      // Each bar = exactly 1 staff member for exactly those hours.
-      // Two overlapping bars of the same role = 2 people working simultaneously.
-      const segments = rawSlots
+      // Sort by fewest qualified candidates first (most constrained slots filled first).
+      // This ensures rare roles like dishwasher aren't blocked by CS grabbing the only person.
+      const countCandidates = (slot: typeof rawSlots[0]) => {
+        const isCsDishSlot = slot.role === 'cs_dish'
+        return staff.filter(m => {
+          if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          if (isCsDishSlot) return canDoCsDish(m)
+          return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, slot.role))
+        }).length
+      }
+      const segments = rawSlots.sort((a, b) => countCandidates(a) - countCandidates(b))
 
       for (const seg of segments) {
         const isCsDish = seg.role === 'cs_dish'
@@ -510,14 +518,12 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
     weekDates.forEach((date, di) => {
       const dayName  = DAYS[di] as string
-      const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
+      const rawSlots = (reqs[dayName] ?? []).slice()
       if (!rawSlots.length) return
 
       const dateStr = toDateStr(date)
       const assignedToday = new Set<string>()
       const hoursAssignedToday = new Map<string, number>()
-
-      const segments = rawSlots
 
       const roleMatches = (staffRole: string, reqRole: string) =>
         staffRole === reqRole ||
@@ -531,6 +537,16 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         return roles.some(r => r === 'customer_service' || r === 'floor_staff')
           && roles.some(r => r === 'dishwasher')
       }
+
+      const countCandidatesAuto = (slot: typeof rawSlots[0]) => {
+        const isCsDishSlot = slot.role === 'cs_dish'
+        return staff.filter(m => {
+          if (unavailSet.has(`${m.id}_${dateStr}`)) return false
+          if (isCsDishSlot) return canDoCsDish(m)
+          return (rolesByUser[m.id] ?? []).some(r => roleMatches(r.role, slot.role))
+        }).length
+      }
+      const segments = rawSlots.sort((a, b) => countCandidatesAuto(a) - countCandidatesAuto(b))
 
       const ruleRoleOk = (ruleRole: string | undefined, segRole: string) =>
         !ruleRole || ruleRole === 'any' || ruleRole === segRole ||
