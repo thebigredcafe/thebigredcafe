@@ -983,11 +983,11 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
               <td className="px-3 py-2 sticky left-0 bg-gray-50 font-medium text-gray-500">Total hrs</td>
               {dailyTotals.map((t, i) => (
                 <td key={i} className="text-center px-2 py-2 font-semibold text-gray-700">
-                  {t > 0 ? t.toFixed(1) : '–'}
+                  {t > 0 ? t.toFixed(2) : '–'}
                 </td>
               ))}
               <td className="text-center px-3 py-2 font-bold text-gray-900">
-                {dailyTotals.reduce((a, b) => a + b, 0).toFixed(1)}
+                {dailyTotals.reduce((a, b) => a + b, 0).toFixed(2)}
               </td>
             </tr>
             {/* Daily cost row */}
