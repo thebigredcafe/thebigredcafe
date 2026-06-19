@@ -222,7 +222,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
     const timeToMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
 
-    const activeRules = loadActiveRules()
+    const activeRules = await loadActiveRules()
 
     const next: Record<string, ShiftData> = {}
     const assignedDays = new Set<string>()   // `${memberId}_${dateStr}`
@@ -524,28 +524,26 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
 
   // ── Auto-fill from Requirements ──────────────────────────────────────────
 
-  // Read structured rules (cafeRules_v1). Falls back to old text prefs for backward compat.
-  function loadActiveRules(): import('./RuleBuilder').Rule[] {
+  // Load active rules — DB first, localStorage fallback
+  async function loadActiveRules(): Promise<import('./RuleBuilder').Rule[]> {
+    try {
+      const res = await fetch('/api/rules')
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('cafeRules_v1', JSON.stringify(data))
+          return data.filter((r: import('./RuleBuilder').Rule) => r.enabled)
+        }
+      }
+    } catch { /**/ }
     try {
       const raw = localStorage.getItem('cafeRules_v1')
       if (raw) {
         const parsed = JSON.parse(raw) as import('./RuleBuilder').Rule[]
         return parsed.filter(r => r.enabled)
       }
-      // Backward compat: read old text prefs and convert to rule signals
-      const oldRaw = localStorage.getItem('cafePreferences_v1')
-      if (!oldRaw) return []
-      const oldPrefs = JSON.parse(oldRaw) as { text: string; enabled: boolean }[]
-      const texts = oldPrefs.filter(p => p.enabled).map(p => p.text.toLowerCase())
-      const rules: import('./RuleBuilder').Rule[] = []
-      if (texts.some(p => p.includes('junior')))
-        rules.push({ id: 'compat_1', enabled: true, type: 'prefer_group', group: 'school', role: 'any', day: 'any' })
-      if (texts.some(p => p.includes('4 star') || (p.includes('kitchen') && p.includes('till 2'))))
-        rules.push({ id: 'compat_2', enabled: true, type: 'require_skill', role: 'kitchen_cook', skillMin: 4, timeCondition: 'until', timeValue: '14:00' })
-      if (texts.some(p => p.includes('wage') || p.includes('save')))
-        rules.push({ id: 'compat_3', enabled: true, type: 'prefer_cost', costDir: 'cheaper' })
-      return rules
-    } catch { return [] }
+    } catch { /**/ }
+    return []
   }
 
   // Split a long requirement bar into human-sized segments.
@@ -597,7 +595,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
     }
     if (!Object.keys(reqs).length) return
 
-    const activeRules = loadActiveRules()
+    const activeRules = await loadActiveRules()
 
     const minToTime = (m: number) =>
       `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`

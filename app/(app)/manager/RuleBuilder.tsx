@@ -311,11 +311,43 @@ export default function RuleBuilder({ staff }: { staff: { id: string; full_name:
   const [rules, setRules] = useState<Rule[]>(loadRules)
   const [dragging, setDragging] = useState<{ id: string; idx: number } | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
 
+  // Load from DB on mount, fall back to localStorage
+  useEffect(() => {
+    fetch('/api/rules')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setRules(data)
+          localStorage.setItem(RULE_STORAGE_KEY, JSON.stringify(data))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Keep localStorage in sync for immediate use by buildRoster
   useEffect(() => {
     localStorage.setItem(RULE_STORAGE_KEY, JSON.stringify(rules))
   }, [rules])
+
+  async function saveRules() {
+    setSaving(true)
+    setSaved(false)
+    try {
+      const res = await fetch('/api/rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rules),
+      })
+      if (res.ok) setSaved(true)
+    } finally {
+      setSaving(false)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  }
 
   function addRule() {
     const id = Date.now().toString()
@@ -502,7 +534,16 @@ export default function RuleBuilder({ staff }: { staff: { id: string; full_name:
         >
           + Add rule
         </button>
-        <p className="text-xs text-gray-400">Drag ⠿ to reorder · ✓ to enable/disable</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-gray-400">Drag ⠿ to reorder · ✓ to enable/disable</p>
+          <button
+            onClick={saveRules}
+            disabled={saving}
+            className="px-4 py-2 text-sm font-medium bg-green-700 text-white rounded-lg hover:bg-green-800 disabled:opacity-50 transition-colors"
+          >
+            {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save preferences'}
+          </button>
+        </div>
       </div>
 
       {/* Legend */}
