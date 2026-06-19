@@ -249,12 +249,9 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       const rawSlots = (reqs[dayName] ?? []).slice().sort((a, b) => a.startMin - b.startMin)
       if (!rawSlots.length) continue
 
-      // Each bar = exactly 1 staff member needed for that time range.
-      // Two overlapping barista bars = 2 baristas working simultaneously.
-      // Process each bar independently, assigning one person per bar.
-      const segments = rawSlots.flatMap(slot =>
-        splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
-      )
+      // Each bar = exactly 1 staff member for exactly those hours.
+      // Two overlapping bars of the same role = 2 people working simultaneously.
+      const segments = rawSlots
 
       for (const seg of segments) {
         const isCsDish = seg.role === 'cs_dish'
@@ -520,9 +517,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       const assignedToday = new Set<string>()
       const hoursAssignedToday = new Map<string, number>()
 
-      const segments = rawSlots.flatMap(slot =>
-        splitToSegments(slot.role, slot.startMin, slot.endMin).map(seg => ({ ...slot, ...seg }))
-      )
+      const segments = rawSlots
 
       const roleMatches = (staffRole: string, reqRole: string) =>
         staffRole === reqRole ||
