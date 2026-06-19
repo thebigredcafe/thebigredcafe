@@ -291,13 +291,23 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           (r.role === seg.role || (r.role === 'customer_service' && (seg.role === 'floor_staff' || seg.role === 'cs_dish')))
         )
 
+        const dailyRoleHours = Object.entries(next).reduce((acc, [k, s]) => {
+          if (!k.endsWith(`_${dateStr}`)) return acc
+          const h = calcHours(s.start_time, s.end_time)
+          const r = s.role
+          acc[r] = (acc[r] ?? 0) + h
+          return acc
+        }, {} as Record<string, number>)
+
+        if (maxRoleRule?.maxRoleHours && (dailyRoleHours[seg.role] ?? 0) + segHours > maxRoleRule.maxRoleHours) continue
+
         const candidates = staff.filter(m => {
           if (assignedDays.has(`${m.id}_${dateStr}`)) return false
           if (unavailSet.has(`${m.id}_${dateStr}`)) return false
           if (avoidedToday.has(m.id)) return false
           if (weeklyHours[m.id] + segHours > getMax(m) + 0.5) return false
-          const maxHoursRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
-          if (maxHoursRule?.maxHours && weeklyHours[m.id] + segHours > maxHoursRule.maxHours) return false
+          const personRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
+          if (personRule?.maxHours && personRule.maxHours > 0 && weeklyHours[m.id] + segHours > personRule.maxHours) return false
           const isSchool = !!m.is_school_student
           if (minShiftRule) {
             const threshold = isSchool ? juniorMinShiftMins : minShiftMins
@@ -331,7 +341,9 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
           }
 
           // Base score: prioritise staff furthest below their minimum hours
-          const deficit = Math.max(0, getMin(m) - weeklyHours[m.id])
+          const personRule = activeRules.find(r => r.type === 'max_hours' && r.staffId === m.id)
+          const effectiveMin = personRule?.minWeekHours ?? getMin(m)
+          const deficit = Math.max(0, effectiveMin - weeklyHours[m.id])
           let score = skill * 10 + deficit * 5
 
           // Apply preference rules

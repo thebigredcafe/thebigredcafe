@@ -30,8 +30,10 @@ export interface Rule {
   costDir?: 'cheaper' | 'pricier'
   // prefer_staff / max_hours / avoid_day
   staffId?: string
+  minWeekHours?: number
   maxHours?: number
   // max_role_hours
+  minRoleHours?: number
   maxRoleHours?: number
   // min_shift
   minHours?: number
@@ -68,8 +70,8 @@ const RULE_TYPE_OPTIONS: { value: RuleType; label: string; description: string }
   { value: 'require_skill', label: 'Require skill',   description: 'Enforce a minimum skill level for a role and time' },
   { value: 'prefer_cost',   label: 'Prefer cheaper',  description: 'Prefer lower (or higher) wage staff when skill is equal' },
   { value: 'prefer_staff',  label: 'Prefer person',   description: 'Prefer a specific staff member for a role/day' },
-  { value: 'max_hours',      label: 'Max hours (person)', description: 'Cap a staff member at N hours per day' },
-  { value: 'max_role_hours', label: 'Max hours (role)',   description: 'Cap total daily hours for a specific role — e.g. limit dishwasher coverage to 5h/day' },
+  { value: 'max_hours',      label: 'Hours (person)', description: 'Set min and max weekly hours for a staff member' },
+  { value: 'max_role_hours', label: 'Hours (role)',   description: 'Set min and max daily hours for a specific role' },
   { value: 'avoid_day',      label: 'Avoid on day',       description: 'Never auto-assign a staff member on a given day' },
   { value: 'min_shift',     label: 'Min shift length', description: 'Minimum hours for a shift; school kids can be shorter but only if cheaper' },
   { value: 'note',          label: 'Note / reminder', description: 'A text note — does not affect auto-fill, just for your reference' },
@@ -81,8 +83,8 @@ function defaultForType(type: RuleType): Partial<Rule> {
     case 'require_skill': return { role: 'kitchen_cook', skillMin: 4, timeCondition: 'until', timeValue: '14:00', day: 'any' }
     case 'prefer_cost':   return { costDir: 'cheaper' }
     case 'prefer_staff':  return { staffId: '', role: 'any', day: 'any' }
-    case 'max_hours':      return { staffId: '', maxHours: 6 }
-    case 'max_role_hours': return { role: 'dishwasher', maxRoleHours: 5 }
+    case 'max_hours':      return { staffId: '', minWeekHours: 0, maxHours: 38 }
+    case 'max_role_hours': return { role: 'dishwasher', minRoleHours: 0, maxRoleHours: 8 }
     case 'avoid_day':     return { staffId: '', day: 'Mon' }
     case 'min_shift':     return { minHours: 2, juniorMinHours: 1.5, juniorOnlyIfCheaper: true }
     case 'note':          return { noteText: '' }
@@ -231,9 +233,11 @@ function RuleFields({ rule, onChange, staff }: {
       return (
         <div className="flex flex-wrap items-center gap-1.5">
           <Sel value={rule.staffId ?? ''} onChange={v => onChange({ staffId: v })} options={staffOptions} />
-          <Lbl>works max</Lbl>
-          <Num value={rule.maxHours ?? 6} onChange={v => onChange({ maxHours: v })} min={1} max={12} />
-          <Lbl>hours/day</Lbl>
+          <Lbl>min</Lbl>
+          <Num value={rule.minWeekHours ?? 0} onChange={v => onChange({ minWeekHours: v })} min={0} max={60} step={0.5} />
+          <Lbl>h / max</Lbl>
+          <Num value={rule.maxHours ?? 38} onChange={v => onChange({ maxHours: v })} min={0} max={60} step={0.5} />
+          <Lbl>h per week</Lbl>
         </div>
       )
 
@@ -241,9 +245,11 @@ function RuleFields({ rule, onChange, staff }: {
       return (
         <div className="flex flex-wrap items-center gap-1.5">
           <Sel value={rule.role ?? 'dishwasher'} onChange={v => onChange({ role: v })} options={ROLE_OPTIONS.filter(o => o.value !== 'any')} />
-          <Lbl>max</Lbl>
-          <Num value={rule.maxRoleHours ?? 5} onChange={v => onChange({ maxRoleHours: v })} min={1} max={14} step={0.5} />
-          <Lbl>hours total per day</Lbl>
+          <Lbl>min</Lbl>
+          <Num value={rule.minRoleHours ?? 0} onChange={v => onChange({ minRoleHours: v })} min={0} max={24} step={0.5} />
+          <Lbl>h / max</Lbl>
+          <Num value={rule.maxRoleHours ?? 8} onChange={v => onChange({ maxRoleHours: v })} min={0} max={24} step={0.5} />
+          <Lbl>h per day</Lbl>
         </div>
       )
 
