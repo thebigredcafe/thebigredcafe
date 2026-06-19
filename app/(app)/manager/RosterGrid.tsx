@@ -524,6 +524,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
       const dateStr = toDateStr(date)
       const assignedToday = new Set<string>()
       const hoursAssignedToday = new Map<string, number>()
+      const roleHoursToday = new Map<string, number>()  // role → total minutes assigned today
 
       const roleMatches = (staffRole: string, reqRole: string) =>
         staffRole === reqRole ||
@@ -560,6 +561,10 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         const isCsDish      = seg.role === 'cs_dish'
         const isAfternoonCS = (seg.role === 'customer_service' || seg.role === 'floor_staff' || isCsDish) && seg.startMin >= 14 * 60
         const segMins       = seg.endMin - seg.startMin
+
+        // Skip segment if role daily cap already reached
+        const maxRoleRule = activeRules.find(r => r.type === 'max_role_hours' && (r.role === seg.role || (r.role === 'customer_service' && (seg.role === 'floor_staff' || seg.role === 'cs_dish'))))
+        if (maxRoleRule?.maxRoleHours && (roleHoursToday.get(seg.role) ?? 0) + segMins > maxRoleRule.maxRoleHours * 60) continue
 
         const avoidedToday = new Set<string>(
           activeRules
@@ -667,6 +672,7 @@ export default function RosterGrid({ staff, staffRoles, templates, fixtures, ini
         const winner = finalScored[0].m
         assignedToday.add(winner.id)
         hoursAssignedToday.set(winner.id, (hoursAssignedToday.get(winner.id) ?? 0) + segMins)
+        roleHoursToday.set(seg.role, (roleHoursToday.get(seg.role) ?? 0) + segMins)
 
         // cs_dish shows as dishwasher on the roster (they'll also cover CS/floor)
         let bestRole: string
