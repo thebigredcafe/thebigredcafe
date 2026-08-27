@@ -14,14 +14,23 @@ export interface BoppleProduct {
 }
 
 const BASE = 'https://orders.bopple.me/api/venues/big-red-cafe/menu'
-const HEADERS = { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
+const HEADERS = {
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-AU,en;q=0.9',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+  'Origin': 'https://bopple.app',
+  'Referer': 'https://bopple.app/big-red-cafe',
+}
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: HEADERS,
     next: { revalidate: 3600 },
   })
-  if (!res.ok) throw new Error(`Bopple API ${path}: ${res.status}`)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Bopple API ${path}: ${res.status} ${body.slice(0, 200)}`)
+  }
   const json = await res.json()
   return (json.data ?? json) as T
 }
