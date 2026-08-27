@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Café Roster",
   description: "Staff scheduling for Big Red",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Red Cafe — Engadine, NSW</title>
+<meta name="description" content="Big Red Cafe is Engadine's neighbourhood café on Station Street. Specialty coffee, all-day breakfast, and hand-pressed burgers — 90m from Engadine Station. Open 7 days.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://bigredcafe.com.au/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="restaurant">
+<meta property="og:title" content="Big Red Cafe — Engadine, NSW">
+<meta property="og:description" content="Specialty coffee, all-day breakfast and burgers on Station Street, Engadine. 90m from the station. Open 7 days.">
+<meta property="og:url" content="https://bigredcafe.com.au/">
+<meta property="og:site_name" content="Big Red Cafe">
+<meta property="og:locale" content="en_AU">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Big Red Cafe — Engadine">
+<meta name="twitter:description" content="Specialty coffee, all-day breakfast and burgers. 90m from Engadine Station.">
+
+<!-- Local Business structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CafeOrCoffeeShop",
+  "name": "Big Red Cafe",
+  "description": "Specialty coffee, all-day breakfast, and hand-pressed burgers in Engadine NSW.",
+  "url": "https://bigredcafe.com.au",
+  "telephone": "+61401990733",
+  "email": "thebigredcafe@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "13-15 Station Street",
+    "addressLocality": "Engadine",
+    "addressRegion": "NSW",
+    "postalCode": "2233",
+    "addressCountry": "AU"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": -34.0592,
+    "longitude": 151.0168
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "06:00",
+      "closes": "16:30"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "07:00",
+      "closes": "14:30"
+    }
+  ],
+  "servesCuisine": ["Cafe", "Australian", "Breakfast", "Coffee"],
+  "priceRange": "$$",
+  "sameAs": [
+    "https://www.instagram.com/bigredcafe/",
+    "https://www.facebook.com/bigredcafe/"
+  ],
+  "hasMenu": "https://bopple.app/big-red-cafe/bio",
+  "currenciesAccepted": "AUD",
+  "paymentAccepted": "Cash, Credit Card, EFTPOS"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F7F0DE;
+    --cream-2:#F1E7CF;
+    --brick:#A6332B;
+    --brick-dark:#7E2620;
+    --espresso:#2B1F17;
+    --mustard:#D9A441;
+    --sage:#6C7A56;
+    --line:#DFCFA6;
+    --max:1180px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--espresso);
+    font-family:'Libre Franklin', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .eyebrow{
+    font-family:'Libre Franklin', sans-serif;
+    font-weight:700;
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--brick);
+  }
+  a{color:inherit;}
+  .wrap{max-width:var(--max); margin:0 auto; padding:0 28px;}
+  img{max-width:100%; display:block;}
+
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:0.5;
+    background-image:radial-gradient(circle at 1px 1px, rgba(43,31,23,0.045) 1px, transparent 0);
+    background-size:5px 5px;
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(247,240,222,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  nav.wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:16px; padding-bottom:16px;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.25rem;
+    text-decoration:none; color:var(--espresso);
+  }
+  .logo .dot{
+    width:11px; height:11px; border-radius:50%;
+    background:var(--brick);
+    box-shadow:0 0 0 3px rgba(166,51,43,0.15);
+  }
+  .navlinks{display:flex; gap:34px; list-style:none; margin:0; padding:0;}
+  .navlinks a{
+    font-size:0.85rem; font-weight:600; text-decoration:none;
+    color:var(--espresso); opacity:0.75;
+    padding-bottom:3px; border-bottom:2px solid transparent;
+    transition:opacity .2s, border-color .2s;
+  }
+  .navlinks a:hover{opacity:1; border-color:var(--brick);}
+  .nav-cta{
+    display:inline-block;
+    background:var(--brick); color:var(--cream);
+    font-size:0.8rem; font-weight:700;
+    padding:10px 18px; border-radius:3px;
+    text-decoration:none;
+    box-shadow:2px 2px 0 var(--brick-dark);
+    transition:transform .15s, box-shadow .15s;
+    white-space:nowrap;
+  }
+  .nav-cta:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--brick-dark);}
+  .navburger{
+    display:none; background:none; border:none; cursor:pointer; padding:6px;
+    flex-direction:column; gap:5px;
+  }
+  .navburger span{display:block; width:22px; height:2px; background:var(--espresso); transition:transform .2s, opacity .2s;}
+
+  /* mobile nav drawer */
+  .mobile-nav{
+    display:none; flex-direction:column; gap:0;
+    background:var(--cream); border-top:1px solid var(--line);
+    padding:8px 0 16px;
+  }
+  .mobile-nav a{
+    padding:12px 28px; font-size:0.95rem; font-weight:600;
+    text-decoration:none; color:var(--espresso);
+    border-bottom:1px solid var(--line);
+  }
+  .mobile-nav a:last-child{border-bottom:none;}
+  .mobile-nav.open{display:flex;}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative; z-index:1; padding:72px 0 60px; overflow:hidden;}
+  .hero .wrap{display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;}
+  .hero-eyebrow{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .hero-eyebrow .rule{width:34px; height:2px; background:var(--brick);}
+  .hero h1{font-size:clamp(3rem, 7vw, 5.4rem); line-height:0.92; color:var(--brick);}
+  .hero h1 em{font-style:italic; font-weight:500; color:var(--espresso); display:block; font-size:0.42em; margin-top:10px; letter-spacing:0.01em;}
+  .hero p.lede{margin-top:22px; font-size:1.08rem; line-height:1.65; max-width:46ch; color:#4A392C;}
+  .hero-actions{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-weight:700; font-size:0.88rem;
+    padding:13px 22px; border-radius:3px; text-decoration:none;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn-primary{background:var(--brick); color:var(--cream); box-shadow:3px 3px 0 var(--brick-dark);}
+  .btn-primary:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--brick-dark);}
+  .btn-ghost{background:transparent; color:var(--espresso); border:1.5px solid var(--espresso);}
+  .btn-ghost:hover{background:var(--espresso); color:var(--cream);}
+  .hero-mark{position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;}
+  .cup-illustration{width:100%; max-width:360px;}
+
+  /* ---------- MARQUEE ---------- */
+  .strip{
+    background:var(--espresso); color:var(--cream);
+    padding:13px 0; overflow:hidden; white-space:nowrap;
+    border-top:1px solid var(--brick); border-bottom:1px solid var(--brick);
+  }
+  .strip .track{
+    display:inline-block; padding-left:100%;
+    animation:scroll 26s linear infinite;
+    font-family:'Fraunces', serif; font-style:italic; font-size:1rem; letter-spacing:0.01em;
+  }
+  .strip .track span{margin:0 28px; opacity:0.9;}
+  @keyframes scroll{ from{transform:translateX(0);} to{transform:translateX(-100%);} }
+
+  /* ---------- SECTIONS ---------- */
+  section{position:relative; z-index:1; padding:88px 0;}
+  .section-head{max-width:640px; margin-bottom:52px;}
+  .section-head h2{font-size:clamp(2.1rem,4vw,2.9rem); margin-top:10px; line-height:1.05;}
+  .section-head p{margin-top:16px; font-size:1.02rem; line-height:1.6; color:#4A392C;}
+
+  /* ---------- ABOUT ---------- */
+  .about{background:var(--cream-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .about .wrap{display:grid; grid-template-columns:0.85fr 1.15fr; gap:56px; align-items:start;}
+  .about-figure{
+    border:1.5px solid var(--espresso); border-radius:4px;
+    padding:26px; background:var(--cream);
+    box-shadow:6px 6px 0 rgba(43,31,23,0.08);
+  }
+  .about-figure .num{font-family:'Fraunces',serif; font-size:2.6rem; color:var(--brick); line-height:1;}
+  .about-figure .label{font-size:0.82rem; margin-top:8px; color:#4A392C;}
+  .about-figure .figrow{display:flex; justify-content:space-between; gap:20px; padding-top:22px; margin-top:22px; border-top:1px dashed var(--line);}
+  .about-body p{font-size:1.04rem; line-height:1.75; color:#3A2C21; margin:0 0 18px;}
+  .badges{display:flex; flex-wrap:wrap; gap:10px; margin-top:26px;}
+  .badge{font-size:0.78rem; font-weight:600; padding:7px 13px; border:1px solid var(--espresso); border-radius:20px; color:var(--espresso);}
+
+  /* ---------- MENU ---------- */
+  .menu-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px;}
+  .item-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .price{font-weight:800; color:var(--brick); font-size:0.88rem; white-space:nowrap;}
+  .menu-card{background:var(--cream-2); border:1px solid var(--line); border-radius:6px; padding:26px 22px; position:relative;}
+  .menu-card .icon{width:34px; height:34px; margin-bottom:14px;}
+  .menu-card h3{font-size:1.15rem; color:var(--brick);}
+  .menu-card ul{list-style:none; margin:14px 0 0; padding:0;}
+  .menu-card li{padding:10px 0; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:3px;}
+  .menu-card li:first-child{border-top:none;}
+  .item-name{font-weight:700; font-size:0.9rem; line-height:1.3;}
+  .item-desc{font-size:0.78rem; color:#5A4A3C; line-height:1.4;}
+  .menu-note{
+    margin-top:36px; padding:18px 22px; background:var(--espresso); color:var(--cream);
+    border-radius:6px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  }
+  .menu-note p{margin:0; font-size:0.92rem; opacity:0.9; max-width:52ch;}
+
+  /* ---------- GALLERY ---------- */
+  .gallery{background:var(--cream-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .gallery-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+  .gallery-grid .lightwidget-widget{min-height:420px;}
+  .gallery-cta{margin-top:30px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .gallery-cta p{margin:0; font-size:0.9rem; color:#4A392C;}
+
+  /* ---------- VISIT ---------- */
+  .visit .wrap{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
+  .board{
+    background:var(--espresso); color:var(--mustard);
+    border-radius:6px; padding:26px 24px;
+    font-family:'Libre Franklin', monospace;
+    box-shadow:6px 6px 0 rgba(43,31,23,0.15);
+  }
+  .board-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:2px solid var(--mustard); padding-bottom:12px; margin-bottom:6px;
+    font-family:'Fraunces', serif; color:var(--cream);
+  }
+  .board-head h3{font-size:1.1rem; letter-spacing:0.04em;}
+  .board-head span{font-size:0.72rem; letter-spacing:0.12em; color:var(--mustard); opacity:0.85;}
+  .board-row{
+    display:grid; grid-template-columns:1.3fr 1fr auto; gap:10px;
+    padding:13px 2px; border-bottom:1px dashed rgba(217,164,65,0.25);
+    font-size:0.92rem; align-items:center;
+  }
+  .board-row:last-child{border-bottom:none;}
+  .board-row .day{font-weight:700; color:var(--cream); letter-spacing:0.03em;}
+  .board-row .status{font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; padding:3px 8px; border-radius:3px; justify-self:start;}
+  .status.open{background:rgba(108,122,86,0.25); color:#9FB37E;}
+  .status.closed{background:rgba(166,51,43,0.25); color:#E39089;}
+
+  .visit-info h2{font-size:clamp(2rem,4vw,2.7rem); margin-bottom:18px;}
+  .info-list{list-style:none; margin:22px 0 0; padding:0; display:flex; flex-direction:column; gap:18px;}
+  .info-list li{display:flex; gap:14px; align-items:flex-start;}
+  .info-list .ic{width:34px; height:34px; flex:none; border-radius:50%; background:var(--cream-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center;}
+  .info-list .ic svg{width:16px; height:16px;}
+  .info-list .ttl{font-weight:700; font-size:0.95rem;}
+  .info-list .sub{font-size:0.88rem; color:#4A392C; margin-top:2px; line-height:1.5;}
+  .info-list a{text-decoration:underline; text-decoration-color:var(--brick); text-underline-offset:3px;}
+
+  /* Google Maps embed */
+  .map-embed{margin-top:28px; border-radius:6px; overflow:hidden; border:1.5px solid var(--line);}
+  .map-embed iframe{display:block; width:100%; height:220px; border:0;}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--espresso); color:var(--cream); padding:52px 0 28px;}
+  .footer-top{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:32px; padding-bottom:32px; border-bottom:1px solid rgba(247,240,222,0.15);}
+  footer .logo{color:var(--cream);}
+  .footer-links{display:flex; gap:40px; flex-wrap:wrap;}
+  .footer-col h4{font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--mustard); margin-bottom:12px;}
+  .footer-col ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .footer-col a{text-decoration:none; font-size:0.88rem; opacity:0.85;}
+  .footer-col a:hover{opacity:1; text-decoration:underline;}
+  .footer-bottom{display:flex; justify-content:space-between; padding-top:22px; font-size:0.78rem; opacity:0.6; flex-wrap:wrap; gap:10px;}
+
+  /* ---------- REVEAL ---------- */
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1; transform:none; transition:none;}
+    .strip .track{animation:none;}
+    html{scroll-behavior:auto;}
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1080px){.menu-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:920px){
+    .navlinks{display:none;}
+    .navburger{display:flex;}
+    .hero .wrap{grid-template-columns:1fr; gap:36px;}
+    .hero-mark{max-width:280px; margin:0 auto;}
+    .about .wrap{grid-template-columns:1fr;}
+    .menu-grid{grid-template-columns:1fr;}
+    .gallery-grid{grid-template-columns:1fr;}
+    .visit .wrap{grid-template-columns:1fr;}
+    .footer-top{flex-direction:column;}
+  }
+  @media (max-width:520px){
+    .hero-actions{flex-direction:column; align-items:stretch;}
+    .board-row{grid-template-columns:1fr auto; row-gap:4px;}
+    .board-row .status{grid-column:1/-1;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="#top" class="logo"><span class="dot"></span>Big Red</a>
+    <ul class="navlinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <a class="nav-cta" href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener">Order ahead</a>
+    <button class="navburger" aria-label="Menu" aria-expanded="false" onclick="toggleNav(this)">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="#about" onclick="closeNav()">About</a>
+    <a href="#menu" onclick="closeNav()">Menu</a>
+    <a href="#gallery" onclick="closeNav()">Gallery</a>
+    <a href="#visit" onclick="closeNav()">Visit</a>
+    <a href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener" style="color:var(--brick);">Order ahead →</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="hero-eyebrow"><span class="rule"></span><span class="eyebrow">Engadine, NSW · 90m from the station</span></div>
+        <h1>BIG RED<em>a cozy cup, straight off the platform</em></h1>
+        <p class="lede">Big Red Cafe is the neighbourhood spot on Station Street — good coffee, big breakfasts, and a burger worth missing a train for. Seven days of specialty coffee, all-day brekkie, and staff who know your order.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#menu">See the menu</a>
+          <a class="btn btn-ghost" href="#visit">Find us</a>
+        </div>
+      </div>
+      <div class="hero-mark">
+        <svg class="cup-illustration" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 250 Q150 275 240 250" stroke="#2B1F17" stroke-width="2" opacity="0.25"/>
+          <path d="M85 120 L95 205 Q150 225 205 205 L215 120 Z" fill="#A6332B"/>
+          <path d="M85 120 L95 205 Q150 225 205 205 L215 120 Z" stroke="#2B1F17" stroke-width="3" fill="none"/>
+          <ellipse cx="150" cy="120" rx="65" ry="14" fill="#7E2620" stroke="#2B1F17" stroke-width="3"/>
+          <ellipse cx="150" cy="118" rx="52" ry="9" fill="#F1E7CF"/>
+          <path d="M215 135 Q250 135 250 160 Q250 185 215 182" stroke="#2B1F17" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M120 95 Q112 75 124 60" stroke="#2B1F17" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+          <path d="M150 90 Q142 68 154 50" stroke="#2B1F17" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+          <path d="M180 95 Q172 75 184 60" stroke="#2B1F17" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+          <rect x="30" y="250" width="240" height="6" rx="3" fill="#2B1F17" opacity="0.15"/>
+          <rect x="30" y="264" width="240" height="4" rx="2" fill="#2B1F17" opacity="0.1"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <div class="strip">
+    <div class="track">
+      <span>SPECIALTY COFFEE</span><span>·</span><span>ALL-DAY BREAKFAST</span><span>·</span><span>HAND-PRESSED BURGERS</span><span>·</span><span>13–15 STATION STREET, ENGADINE</span><span>·</span>
+      <span>SPECIALTY COFFEE</span><span>·</span><span>ALL-DAY BREAKFAST</span><span>·</span><span>HAND-PRESSED BURGERS</span><span>·</span><span>13–15 STATION STREET, ENGADINE</span><span>·</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="wrap">
+      <div class="about-figure reveal">
+        <div class="num">40</div>
+        <div class="label">seats across our dine-in &amp; alfresco tables</div>
+        <div class="figrow">
+          <div>
+            <div class="num" style="font-size:1.6rem;">90m</div>
+            <div class="label">to Engadine Station</div>
+          </div>
+          <div>
+            <div class="num" style="font-size:1.6rem;">7</div>
+            <div class="label">days a week</div>
+          </div>
+        </div>
+      </div>
+      <div class="about-body reveal">
+        <span class="eyebrow">About Big Red</span>
+        <h2 style="margin-top:12px; font-size:clamp(1.9rem,3.4vw,2.5rem); line-height:1.1;">A local spot to slow down before the platform</h2>
+        <p style="margin-top:20px;">We've been pouring coffee and plating brekkie on Station Street for years, and the mission hasn't changed: great coffee, honest food, and a table that feels like yours the second you sit down.</p>
+        <p>From the first flat white of the morning to the last thickshake before pick-up, we cook everything to order — sourdough toasted properly, eggs the way you actually asked for them, and a burger patty that's never seen a freezer.</p>
+        <div class="badges">
+          <span class="badge">Dine-in &amp; takeaway</span>
+          <span class="badge">Alfresco seating</span>
+          <span class="badge">Free Wi-Fi</span>
+          <span class="badge">Pet friendly</span>
+          <span class="badge">Vegetarian &amp; GF options</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section id="menu">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">On the menu</span>
+        <h2>What's actually on the menu</h2>
+        <p>Pulled straight from our order menu — prices are a guide and may vary in-store or on delivery apps.</p>
+      </div>
+
+      <div class="menu-grid">
+        <div class="menu-card reveal">
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M12 20c0-6 5-11 12-11s12 5 12 11" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M8 20h32l-3 16H11L8 20Z" stroke="#A6332B" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 26h16" stroke="#A6332B" stroke-width="2" stroke-linecap="round"/></svg>
+          <h3>All Day Breakfast</h3>
+          <ul>
+            <li><div class="item-top"><span class="item-name">Avo Smash</span><span class="price">$19</span></div><span class="item-desc">Cherry tomatoes, feta, red onion, lemon, chilli flakes, avocado on sourdough</span></li>
+            <li><div class="item-top"><span class="item-name">Acai Bowl</span><span class="price">$17–20</span></div><span class="item-desc">Amazonia acai, muesli, fresh fruit, granola, chia seeds, walnuts, coconut</span></li>
+            <li><div class="item-top"><span class="item-name">Nutrition Bowl</span><span class="price">$19</span></div><span class="item-desc">Avocado, quinoa, spinach, hummus, pumpkin, roast veg, roast corn</span></li>
+            <li><div class="item-top"><span class="item-name">Magic Mushroom</span><span class="price">$16</span></div><span class="item-desc">Grilled mushrooms, butter &amp; herbs on soy linseed sourdough, poached egg, parmesan</span></li>
+            <li><div class="item-top"><span class="item-name">Brekky Burger</span><span class="price">$14–17.50</span></div><span class="item-desc">Bacon, egg, haloumi, hash brown, avocado, smoky BBQ sauce</span></li>
+            <li><div class="item-top"><span class="item-name">B &amp; E 2.0</span><span class="price">$14–17.50</span></div><span class="item-desc">Sriracha crispy bacon, egg, cheese, hash brown, avocado, garlic aioli</span></li>
+            <li><div class="item-top"><span class="item-name">Bacon &amp; Egg Roll</span><span class="price">$8</span></div><span class="item-desc">With BBQ sauce</span></li>
+            <li><div class="item-top"><span class="item-name">Muesli &amp; Yoghurt</span><span class="price">$13</span></div><span class="item-desc">Vanilla yoghurt, muesli, fresh fruit, granola</span></li>
+          </ul>
+        </div>
+
+        <div class="menu-card reveal">
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="16" rx="16" ry="6" stroke="#A6332B" stroke-width="2.5"/><path d="M8 16v6c0 3.3 7.2 6 16 6s16-2.7 16-6v-6" stroke="#A6332B" stroke-width="2.5"/><path d="M8 22v6c0 3.3 7.2 6 16 6s16-2.7 16-6v-6" stroke="#A6332B" stroke-width="2.5"/></svg>
+          <h3>Burgers</h3>
+          <ul>
+            <li><div class="item-top"><span class="item-name">Big Red Beef Burger</span><span class="price">$18</span></div><span class="item-desc">150g beef patty, cream-cheese centre wrapped in bacon, caramelised onion, lettuce, tomato, high-melt cheese, Big Red's burger sauce</span></li>
+            <li><div class="item-top"><span class="item-name">Big Red Chicken Burger</span></div><span class="item-desc">Deep-fried chicken breast, grilled haloumi, lettuce, maple-coated bacon, fresh chilli aioli</span></li>
+            <li><div class="item-top"><span class="item-name">Schnitzel Burger</span></div><span class="item-desc">Chicken schnitzel, melted American cheese, lettuce, mayo</span></li>
+            <li><div class="item-top"><span class="item-name">American BR Beef</span></div><span class="item-desc">A bolder, saucier take on the classic</span></li>
+          </ul>
+        </div>
+
+        <div class="menu-card reveal">
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M8 30c4-10 12-16 16-16s12 6 16 16" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M6 30h36" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <h3>Salads &amp; Sides</h3>
+          <ul>
+            <li><div class="item-top"><span class="item-name">Chicken Salad</span></div><span class="item-desc">Lettuce, haloumi, grilled chicken, bacon, chilli aioli</span></li>
+            <li><div class="item-top"><span class="item-name">Roast Veg Salad</span></div><span class="item-desc">Rocket, roast pumpkin, cherry tomatoes, capsicum, green beans, pomegranate, pine nuts, feta</span></li>
+            <li><div class="item-top"><span class="item-name">Loaded Chips</span></div><span class="item-desc">Crispy chips, bacon, grilled cheese, garlic aioli</span></li>
+            <li><div class="item-top"><span class="item-name">Onion Rings</span></div><span class="item-desc">Crispy, golden, gone fast</span></li>
+          </ul>
+        </div>
+
+        <div class="menu-card reveal">
+          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M14 8h20l-2 26a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4L14 8Z" stroke="#A6332B" stroke-width="2.5" stroke-linejoin="round"/><path d="M10 8h28" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M20 16c1.5 2 1.5 4 0 6" stroke="#A6332B" stroke-width="2" stroke-linecap="round"/></svg>
+          <h3>Coffee &amp; Drinks</h3>
+          <ul>
+            <li><div class="item-top"><span class="item-name">Flat White / Cappuccino / Espresso</span></div><span class="item-desc">Our specialty coffee, made properly</span></li>
+            <li><div class="item-top"><span class="item-name">Iced Latte</span><span class="price">$7</span></div><span class="item-desc">Chilled, smooth, no watering down</span></li>
+            <li><div class="item-top"><span class="item-name">Chai Latte</span></div><span class="item-desc">Hot or iced</span></li>
+            <li><div class="item-top"><span class="item-name">Thickshake</span></div><span class="item-desc">Chocolate, vanilla, caramel or mocha</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="menu-note reveal">
+        <p>Menu &amp; live pricing are kept up to date on our ordering app — order ahead and skip the queue.</p>
+        <a class="btn btn-primary" href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener">Order on Bopple →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="gallery" id="gallery">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">A look inside</span>
+        <h2>The room, the food, the regulars</h2>
+      </div>
+      <div class="gallery-grid reveal">
+        <script src="https://cdn.lightwidget.com/widgets/lightwidget.js"></script>
+        <iframe src="//lightwidget.com/widgets/c4e44af8366d597c8a70d21c016b2e66.html" scrolling="no" allowtransparency="true" class="lightwidget-widget" style="width:100%;border:0;overflow:hidden;"></iframe>
+      </div>
+      <div class="gallery-cta">
+        <p>Live from Instagram — follow along for daily specials and behind-the-counter shots:</p>
+        <a class="btn btn-ghost" href="https://www.instagram.com/bigredcafe/" target="_blank" rel="noopener">@bigredcafe on Instagram →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISIT -->
+  <section id="visit" class="visit">
+    <div class="wrap">
+      <div class="visit-info reveal">
+        <span class="eyebrow">Come say hi</span>
+        <h2>Find us on the platform side of Station Street</h2>
+        <ul class="info-list">
+          <li>
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#A6332B" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="#A6332B" stroke-width="2"/></svg></span>
+            <div><div class="ttl">13–15 Station Street, Engadine NSW 2233</div><div class="sub">90m from Engadine Station · street parking nearby</div></div>
+          </li>
+          <li>
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5c0-1 1-1 1-1h3l2 5-2 2c1 3 3 5 6 6l2-2 5 2v3s0 1-1 1c-9 0-16-7-16-16Z" stroke="#A6332B" stroke-width="2" stroke-linejoin="round"/></svg></span>
+            <div><div class="ttl">0401 990 733</div><div class="sub"><a href="mailto:thebigredcafe@gmail.com">thebigredcafe@gmail.com</a></div></div>
+          </li>
+          <li>
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" stroke="#A6332B" stroke-width="2"/><path d="M4 9h16M9 4v3M15 4v3" stroke="#A6332B" stroke-width="2"/></svg></span>
+            <div><div class="ttl">Order ahead</div><div class="sub"><a href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener">bopple.app/big-red-cafe</a> for pickup</div></div>
+          </li>
+        </ul>
+        <div class="map-embed">
+          <iframe
+            title="Big Red Cafe location"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=Big+Red+Cafe,Engadine+NSW">
+          </iframe>
+        </div>
+      </div>
+
+      <div class="board reveal">
+        <div class="board-head">
+          <h3>DEPARTURES — KITCHEN</h3>
+          <span>OPENING HOURS</span>
+        </div>
+        <div class="board-row"><span class="day">Mon – Fri</span><span>6:00am – 4:30pm</span><span class="status open">Open</span></div>
+        <div class="board-row"><span class="day">Saturday</span><span>7:00am – 2:30pm</span><span class="status open">Open</span></div>
+        <div class="board-row"><span class="day">Sunday</span><span>—</span><span class="status closed">Closed</span></div>
+        <div class="board-row" style="border-top:2px solid var(--mustard); margin-top:6px; padding-top:14px; opacity:0.75;">
+          <span class="day" style="font-weight:400; font-size:0.8rem; color:var(--cream);">* Kitchen closes 3pm weekdays — coffee runs later.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <a href="#top" class="logo"><span class="dot"></span>Big Red</a>
+        <p style="max-width:32ch; font-size:0.88rem; opacity:0.7; margin-top:14px; line-height:1.6;">Coffee, brekkie &amp; burgers on Station Street, Engadine.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Menu</h4>
+          <ul>
+            <li><a href="#menu">Breakfast</a></li>
+            <li><a href="#menu">Burgers &amp; Lunch</a></li>
+            <li><a href="#menu">Coffee &amp; Drinks</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Cafe</h4>
+          <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="#visit">Visit</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Follow</h4>
+          <ul>
+            <li><a href="https://www.instagram.com/bigredcafe/" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://www.facebook.com/bigredcafe/" target="_blank" rel="noopener">Facebook</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Big Red Cafe, Engadine.</span>
+      <span>13–15 Station Street, Engadine NSW 2233</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  function toggleNav(btn) {
+    const nav = document.getElementById('mobileNav');
+    const open = nav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+  }
+  function closeNav() {
+    document.getElementById('mobileNav').classList.remove('open');
+    document.querySelector('.navburger').setAttribute('aria-expanded', 'false');
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

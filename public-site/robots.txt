@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bigredcafe.com.au/sitemap.xml
