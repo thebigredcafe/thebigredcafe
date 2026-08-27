@@ -6,10 +6,11 @@ export interface BoppleCategory {
 
 export interface BoppleProduct {
   id: number
-  product_desc: string
-  description: string | null
-  base_price: number
-  max_price: number | null
+  product_name: string
+  product_desc: string | null
+  price: number
+  price_min: number
+  price_max: number
   image_thumb_url: string | null
 }
 
@@ -32,7 +33,6 @@ async function get<T>(path: string): Promise<T> {
     throw new Error(`Bopple API ${path}: ${res.status} ${body.slice(0, 200)}`)
   }
   const json = await res.json()
-  // API returns array directly or nested under data
   return (Array.isArray(json) ? json : json.data ?? json) as T
 }
 
@@ -57,10 +57,9 @@ export async function fetchMenu(): Promise<{ category: BoppleCategory; products:
 }
 
 export function formatPrice(product: BoppleProduct): string {
-  const min = (product.base_price / 100).toFixed(2).replace(/\.00$/, '')
-  if (product.max_price && product.max_price !== product.base_price) {
-    const max = (product.max_price / 100).toFixed(2).replace(/\.00$/, '')
-    return `$${min}–$${max}`
+  const fmt = (n: number) => `$${n % 1 === 0 ? n.toFixed(0) : n.toFixed(2)}`
+  if (product.price_max && product.price_max !== product.price_min) {
+    return `${fmt(product.price_min)}–${fmt(product.price_max)}`
   }
-  return `$${min}`
+  return fmt(product.price_min || product.price)
 }
