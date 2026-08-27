@@ -14,7 +14,7 @@ function productCard(p: BoppleProduct): string {
   const imgEl = p.image_thumb_url
     ? `<img class="menu-item-img" src="${p.image_thumb_url}" alt="${esc(p.product_name)}" loading="lazy">`
     : placeholder(p)
-  const img = `<a href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener" class="menu-item-img-link">${imgEl}</a>`
+  const img = `<a href="https://bopple.app/big-red-cafe/menu" target="_blank" rel="noopener" class="menu-item-img-link">${imgEl}</a>`
   const desc = p.product_desc ? `<p class="item-desc">${esc(p.product_desc)}</p>` : ''
   return `
           <div class="menu-item reveal">
@@ -61,7 +61,7 @@ export async function GET() {
     menuHtml = buildMenuHtml(menu)
   } catch (err) {
     console.error('Bopple fetch failed, falling back to empty menu:', err)
-    menuHtml = '<p style="color:#A6332B;padding:16px 0">Menu temporarily unavailable — <a href="https://bopple.app/big-red-cafe/bio">order on Bopple</a>.</p>'
+    menuHtml = '<p style="color:#A6332B;padding:16px 0">Menu temporarily unavailable — <a href="https://bopple.app/big-red-cafe/menu">order on Bopple</a>.</p>'
   }
 
   const html = template.replace('{{MENU_CONTENT}}', menuHtml)
