@@ -238,17 +238,39 @@
   .badge{font-size:0.78rem; font-weight:600; padding:7px 13px; border:1px solid var(--espresso); border-radius:20px; color:var(--espresso);}
 
   /* ---------- MENU ---------- */
-  .menu-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px;}
+  .menu-tabs{display:flex; gap:0; flex-wrap:wrap; border-bottom:2px solid var(--line); margin-bottom:36px;}
+  .menu-tab{
+    background:none; border:none; cursor:pointer;
+    font-family:'Libre Franklin',sans-serif; font-weight:700; font-size:0.82rem;
+    letter-spacing:0.06em; text-transform:uppercase;
+    padding:12px 20px; color:var(--espresso); opacity:0.5;
+    border-bottom:3px solid transparent; margin-bottom:-2px;
+    transition:opacity .2s, border-color .2s;
+  }
+  .menu-tab:hover{opacity:0.8;}
+  .menu-tab.active{opacity:1; color:var(--brick); border-bottom-color:var(--brick);}
+  .menu-panel{display:none;}
+  .menu-panel.active{display:block;}
+  .menu-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .menu-grid.cols2{grid-template-columns:repeat(2,1fr);}
+  .menu-item{
+    background:var(--cream-2); border:1px solid var(--line); border-radius:6px;
+    overflow:hidden; display:flex; flex-direction:column;
+  }
+  .menu-item-img{
+    width:100%; aspect-ratio:4/3; object-fit:cover; display:block;
+    background:var(--line);
+  }
+  .menu-item-img-placeholder{
+    width:100%; aspect-ratio:4/3; background:var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .menu-item-img-placeholder svg{opacity:0.25; width:36px; height:36px;}
+  .menu-item-body{padding:16px 18px; flex:1; display:flex; flex-direction:column; gap:6px;}
   .item-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .item-name{font-weight:700; font-size:0.95rem; line-height:1.3; font-family:'Fraunces',serif;}
   .price{font-weight:800; color:var(--brick); font-size:0.88rem; white-space:nowrap;}
-  .menu-card{background:var(--cream-2); border:1px solid var(--line); border-radius:6px; padding:26px 22px; position:relative;}
-  .menu-card .icon{width:34px; height:34px; margin-bottom:14px;}
-  .menu-card h3{font-size:1.15rem; color:var(--brick);}
-  .menu-card ul{list-style:none; margin:14px 0 0; padding:0;}
-  .menu-card li{padding:10px 0; border-top:1px dashed var(--line); display:flex; flex-direction:column; gap:3px;}
-  .menu-card li:first-child{border-top:none;}
-  .item-name{font-weight:700; font-size:0.9rem; line-height:1.3;}
-  .item-desc{font-size:0.78rem; color:#5A4A3C; line-height:1.4;}
+  .item-desc{font-size:0.78rem; color:#5A4A3C; line-height:1.45; margin:0;}
   .menu-note{
     margin-top:36px; padding:18px 22px; background:var(--espresso); color:var(--cream);
     border-radius:6px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
@@ -319,17 +341,22 @@
   }
 
   /* ---------- RESPONSIVE ---------- */
-  @media (max-width:1080px){.menu-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:1080px){.menu-grid{grid-template-columns:repeat(2,1fr);} .menu-grid.cols2{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:920px){
     .navlinks{display:none;}
     .navburger{display:flex;}
     .hero .wrap{grid-template-columns:1fr; gap:36px;}
     .hero-mark{max-width:280px; margin:0 auto;}
     .about .wrap{grid-template-columns:1fr;}
-    .menu-grid{grid-template-columns:1fr;}
+    .menu-grid{grid-template-columns:repeat(2,1fr);}
+    .menu-grid.cols2{grid-template-columns:repeat(2,1fr);}
     .gallery-grid{grid-template-columns:1fr;}
     .visit .wrap{grid-template-columns:1fr;}
     .footer-top{flex-direction:column;}
+    .menu-tab{padding:10px 14px; font-size:0.75rem;}
+  }
+  @media (max-width:560px){
+    .menu-grid,.menu-grid.cols2{grid-template-columns:1fr;}
   }
   @media (max-width:520px){
     .hero-actions{flex-direction:column; align-items:stretch;}
@@ -440,62 +467,339 @@
     <div class="wrap">
       <div class="section-head reveal">
         <span class="eyebrow">On the menu</span>
-        <h2>What's actually on the menu</h2>
-        <p>Pulled straight from our order menu — prices are a guide and may vary in-store or on delivery apps.</p>
+        <h2>What's on the menu</h2>
+        <p>Pulled straight from our Bopple ordering menu. Prices shown are a guide — order ahead for live pricing.</p>
       </div>
 
-      <div class="menu-grid">
-        <div class="menu-card reveal">
-          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M12 20c0-6 5-11 12-11s12 5 12 11" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M8 20h32l-3 16H11L8 20Z" stroke="#A6332B" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 26h16" stroke="#A6332B" stroke-width="2" stroke-linecap="round"/></svg>
-          <h3>All Day Breakfast</h3>
-          <ul>
-            <li><div class="item-top"><span class="item-name">Avo Smash</span><span class="price">$19</span></div><span class="item-desc">Cherry tomatoes, feta, red onion, lemon, chilli flakes, avocado on sourdough</span></li>
-            <li><div class="item-top"><span class="item-name">Acai Bowl</span><span class="price">$17–20</span></div><span class="item-desc">Amazonia acai, muesli, fresh fruit, granola, chia seeds, walnuts, coconut</span></li>
-            <li><div class="item-top"><span class="item-name">Nutrition Bowl</span><span class="price">$19</span></div><span class="item-desc">Avocado, quinoa, spinach, hummus, pumpkin, roast veg, roast corn</span></li>
-            <li><div class="item-top"><span class="item-name">Magic Mushroom</span><span class="price">$16</span></div><span class="item-desc">Grilled mushrooms, butter &amp; herbs on soy linseed sourdough, poached egg, parmesan</span></li>
-            <li><div class="item-top"><span class="item-name">Brekky Burger</span><span class="price">$14–17.50</span></div><span class="item-desc">Bacon, egg, haloumi, hash brown, avocado, smoky BBQ sauce</span></li>
-            <li><div class="item-top"><span class="item-name">B &amp; E 2.0</span><span class="price">$14–17.50</span></div><span class="item-desc">Sriracha crispy bacon, egg, cheese, hash brown, avocado, garlic aioli</span></li>
-            <li><div class="item-top"><span class="item-name">Bacon &amp; Egg Roll</span><span class="price">$8</span></div><span class="item-desc">With BBQ sauce</span></li>
-            <li><div class="item-top"><span class="item-name">Muesli &amp; Yoghurt</span><span class="price">$13</span></div><span class="item-desc">Vanilla yoghurt, muesli, fresh fruit, granola</span></li>
-          </ul>
-        </div>
+      <div class="menu-tabs reveal">
+        <button class="menu-tab active" onclick="switchTab(this,'tab-breakfast')">Breakfast</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-rolls')">Breakfast Rolls</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-burgers')">Burgers</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-lunch')">Lunch</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-toast')">Toast</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-sides')">Sides</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-coffee')">Coffee</button>
+        <button class="menu-tab" onclick="switchTab(this,'tab-drinks')">Drinks</button>
+      </div>
 
-        <div class="menu-card reveal">
-          <svg class="icon" viewBox="0 0 48 48" fill="none"><ellipse cx="24" cy="16" rx="16" ry="6" stroke="#A6332B" stroke-width="2.5"/><path d="M8 16v6c0 3.3 7.2 6 16 6s16-2.7 16-6v-6" stroke="#A6332B" stroke-width="2.5"/><path d="M8 22v6c0 3.3 7.2 6 16 6s16-2.7 16-6v-6" stroke="#A6332B" stroke-width="2.5"/></svg>
-          <h3>Burgers</h3>
-          <ul>
-            <li><div class="item-top"><span class="item-name">Big Red Beef Burger</span><span class="price">$18</span></div><span class="item-desc">150g beef patty, cream-cheese centre wrapped in bacon, caramelised onion, lettuce, tomato, high-melt cheese, Big Red's burger sauce</span></li>
-            <li><div class="item-top"><span class="item-name">Big Red Chicken Burger</span></div><span class="item-desc">Deep-fried chicken breast, grilled haloumi, lettuce, maple-coated bacon, fresh chilli aioli</span></li>
-            <li><div class="item-top"><span class="item-name">Schnitzel Burger</span></div><span class="item-desc">Chicken schnitzel, melted American cheese, lettuce, mayo</span></li>
-            <li><div class="item-top"><span class="item-name">American BR Beef</span></div><span class="item-desc">A bolder, saucier take on the classic</span></li>
-          </ul>
+      <!-- Breakfast -->
+      <div class="menu-panel active" id="tab-breakfast">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1219368_med_d957f8ba-615c-4ecd-bf1c-dc31be7f96d8.webp" alt="Avo Smash Half Serve" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Avo Smash Half Serve</span><span class="price">$14.50</span></div><p class="item-desc">Cherry tomatoes, feta, red onion, lemon, chilli flakes, avocado smashed on 1 piece of sourdough toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209775_med_e2a5bd97-94c8-4918-a7d6-6c3620102df0.webp" alt="Avo Smash" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Avo Smash</span><span class="price">$20</span></div><p class="item-desc">Cherry tomatoes, feta, red onion, lemon, chilli flakes, avocado smashed on 2 pieces of sourdough toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1360502_med_d503020b-4a6d-4e68-a7dc-7efab416097d.webp" alt="Chilli Scrambled Eggs" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Chilli Scrambled Eggs</span><span class="price">$15</span></div><p class="item-desc">Fluffy scrambled eggs with asian chilli oil, served with avocado on soy linseed toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209774_med_7f4241ae-26e8-4293-806d-e7069082237a.webp" alt="Acai Bowl" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Acai Bowl</span><span class="price">$17.50</span></div><p class="item-desc">Acai, muesli, loaded with fresh fruit, granola, chia seeds, walnuts and coconut.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209782_med_f9114422-10f0-4fe0-b103-a70fb8e3de69.webp" alt="Magic Mushrooms" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Magic Mushrooms</span><span class="price">$16</span></div><p class="item-desc">Grilled mushrooms with butter and herbs on soy linseed sourdough with poached egg and parmesan.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Big Breakfast</span><span class="price">$22</span></div><p class="item-desc">Two eggs your way, kransky, bacon, grilled haloumi, tomato, and hash brown on sourdough.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Bacon &amp; Eggs on Sourdough</span><span class="price">$15</span></div><p class="item-desc">Bacon and 2 eggs your way, served on sourdough toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Benedict</span><span class="price">$15–$25</span></div><p class="item-desc">Poached egg, spinach on sourdough toast, topped with our housemade Hollandaise sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Eggs on Sourdough</span><span class="price">$11</span></div><p class="item-desc">2 Poached, fried or scrambled free range eggs served on sourdough toast.</p></div>
+          </div>
         </div>
+      </div>
 
-        <div class="menu-card reveal">
-          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M8 30c4-10 12-16 16-16s12 6 16 16" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M6 30h36" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <h3>Salads &amp; Sides</h3>
-          <ul>
-            <li><div class="item-top"><span class="item-name">Chicken Salad</span></div><span class="item-desc">Lettuce, haloumi, grilled chicken, bacon, chilli aioli</span></li>
-            <li><div class="item-top"><span class="item-name">Roast Veg Salad</span></div><span class="item-desc">Rocket, roast pumpkin, cherry tomatoes, capsicum, green beans, pomegranate, pine nuts, feta</span></li>
-            <li><div class="item-top"><span class="item-name">Loaded Chips</span></div><span class="item-desc">Crispy chips, bacon, grilled cheese, garlic aioli</span></li>
-            <li><div class="item-top"><span class="item-name">Onion Rings</span></div><span class="item-desc">Crispy, golden, gone fast</span></li>
-          </ul>
+      <!-- Breakfast Rolls -->
+      <div class="menu-panel" id="tab-rolls">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209793_med_bf9fdfdb-eff6-49d7-a6e3-c3e4f7c1cba2.webp" alt="B &amp; E 2.0" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">B &amp; E 2.0</span><span class="price">$15</span></div><p class="item-desc">The GOAT of Breakfast Rolls. Avocado, hashbrown, bacon with Sriracha sauce, garlic aioli, egg on a milk bun.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Bacon &amp; Egg Roll</span><span class="price">$9</span></div><p class="item-desc">Soft bun stacked with bacon and egg — warm, satisfying, and perfect on the go. Served with BBQ sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Adam Special</span><span class="price">$13</span></div><p class="item-desc">Bacon, egg, avocado, hashbrown, chilli aioli served on a milk bun.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Brekky Burger</span><span class="price">$15</span></div><p class="item-desc">A hearty loaded breakfast burger on a milk bun.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Egg Haloumi Roll</span><span class="price">$10</span></div><p class="item-desc">Egg and grilled haloumi on a milk bun.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Summer B &amp; E Roll</span><span class="price">$16</span></div><p class="item-desc">A seasonal take on the classic breakfast roll.</p></div>
+          </div>
         </div>
+      </div>
 
-        <div class="menu-card reveal">
-          <svg class="icon" viewBox="0 0 48 48" fill="none"><path d="M14 8h20l-2 26a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4L14 8Z" stroke="#A6332B" stroke-width="2.5" stroke-linejoin="round"/><path d="M10 8h28" stroke="#A6332B" stroke-width="2.5" stroke-linecap="round"/><path d="M20 16c1.5 2 1.5 4 0 6" stroke="#A6332B" stroke-width="2" stroke-linecap="round"/></svg>
-          <h3>Coffee &amp; Drinks</h3>
-          <ul>
-            <li><div class="item-top"><span class="item-name">Flat White / Cappuccino / Espresso</span></div><span class="item-desc">Our specialty coffee, made properly</span></li>
-            <li><div class="item-top"><span class="item-name">Iced Latte</span><span class="price">$7</span></div><span class="item-desc">Chilled, smooth, no watering down</span></li>
-            <li><div class="item-top"><span class="item-name">Chai Latte</span></div><span class="item-desc">Hot or iced</span></li>
-            <li><div class="item-top"><span class="item-name">Thickshake</span></div><span class="item-desc">Chocolate, vanilla, caramel or mocha</span></li>
-          </ul>
+      <!-- Burgers -->
+      <div class="menu-panel" id="tab-burgers">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209796_med_5cf66e43-ad22-4804-80ae-40c35b270022.webp" alt="Big Red Beef Burger" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Big Red Beef Burger</span><span class="price">$15</span></div><p class="item-desc">Beef patty, crispy bacon, American cheese, caramelised onion, lettuce, tomato, Big Red burger sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209797_med_8eb66415-61a4-4fa1-ad9b-3e821216bd20.webp" alt="Big Red Chicken Burger" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Big Red Chicken Burger</span><span class="price">$16</span></div><p class="item-desc">Fried chicken, grilled haloumi, maple bacon, lettuce and chilli aioli.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209798_med_7b9f0db0-002c-4206-b35a-1514729f0891.webp" alt="Cheeseburger" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Cheeseburger</span><span class="price">$10</span></div><p class="item-desc">Beef patty, American cheese, tomato, lettuce and tomato sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209799_med_49d0323f-3270-4c42-9e46-5a3a66a5dd96.webp" alt="Festival Burger" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Festival Burger</span><span class="price">$13</span></div><p class="item-desc">Beef patty, maple bacon, melted American cheese and Big Red burger sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">American BR Beef</span><span class="price">$17</span></div><p class="item-desc">All of Big Red Beef but let's add some onion rings and pickles.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Peri Peri Chicken Burger</span><span class="price">$15</span></div><p class="item-desc">Grilled peri peri chicken, grilled pineapple, tasty cheese, lettuce, tomato, peri peri chilli paste and mayo.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Schnitzel Burger</span><span class="price">$12</span></div><p class="item-desc">Chicken schnitzel with melted American cheese, lettuce and mayo.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lunch -->
+      <div class="menu-panel" id="tab-lunch">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209784_med_3227705e-c44e-4304-b34b-47367dc06bd7.webp" alt="Nutrition Bowl" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Nutrition Bowl</span><span class="price">$18–$31</span></div><p class="item-desc">Avocado, quinoa, spinach, hummus, pumpkin, roasted veggies, roasted corn. Add grilled chicken, smoked salmon or poached eggs.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209834_med_672f6e89-da15-41c8-8471-6c6e54f1616e.webp" alt="Peri Peri Chicken Salad" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Peri Peri Chicken Salad</span><span class="price">$19</span></div><p class="item-desc">Roasted corn, avocado, grilled pineapple, pomegranate, peri peri chicken, peri peri sauce, pico de gallo and cherry tomatoes.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1445163_med_530c3b17-072e-45e6-977e-99ec82faf303.webp" alt="Chicken Toasted Sandwich" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Chicken Toasted Sandwich</span><span class="price">$18</span></div><p class="item-desc">Chicken, avocado, tasty cheese, tomato, spinach, red onion and herb mayo on soy linseed toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1481953_med_274cdd88-4d56-4bf2-9c4c-f0d010289204.webp" alt="Pesto Sandwich" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Pesto Sandwich</span><span class="price">$17.50</span></div><p class="item-desc">Grilled chicken, pesto, rocket, sundried tomato, tasty cheese, red onion and garlic onion.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209836_med_ed53b5a2-4435-4c39-bb48-32a22e181fbe.webp" alt="Steak Sandwich" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Steak Sandwich</span><span class="price">$17</span></div><p class="item-desc">Grilled minute steak, tasty cheese, caramelized onion, tomato, rocket, garlic aioli on toasted ciabatta roll.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209775_med_e2a5bd97-94c8-4918-a7d6-6c3620102df0.webp" alt="Avo Smash" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Avo Smash</span><span class="price">$20</span></div><p class="item-desc">Cherry tomatoes, feta, red onion, lemon, chilli flakes, avocado smashed on 2 pieces of sourdough toast.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Chicken Caesar Salad</span><span class="price">$18</span></div><p class="item-desc">Shredded lettuce, Caesar dressing, parmesan, croutons, bacon, chicken and avocado.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Haloumi Stack</span><span class="price">$18</span></div><p class="item-desc">Wholemeal sourdough with avocado, feta, pine nuts, rocket, pomegranate, cherry tomatoes and grilled haloumi.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Nachos</span><span class="price">$16</span></div><p class="item-desc">Corn chips covered in house-made Mexican beef, cheese, pico de gallo, spring onion and sour cream.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="menu-panel" id="tab-toast">
+        <div class="menu-grid cols2">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1350566_med_7bff9e6a-4f3b-45f0-bea1-f63e30cd866a.webp" alt="Croissant - Ham &amp; Cheese Toasted" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Croissant — Ham &amp; Cheese Toasted</span><span class="price">$8</span></div><p class="item-desc">Light, flaky pastry with a buttery aroma and golden layers. Served with ham and melted cheese.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209826_med_2637d38a-dd04-4a36-9321-6c01f57f1128.webp" alt="Croissant - Toasted" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Croissant — Toasted</span><span class="price">$5.50</span></div><p class="item-desc">Light, flaky pastry with a buttery aroma and golden, delicate layers.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209829_med_da5917fc-38c2-4555-8a03-93c84528422d.webp" alt="Toast" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Toast</span><span class="price">$4–$5</span></div><p class="item-desc">Golden and crisp with a soft centre — simple, warm and endlessly versatile.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Cheese Toastie</span><span class="price">$5</span></div><p class="item-desc">Keeping it simple — just a cheese toastie, plenty of room to add extras.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Raisin Toast</span><span class="price">$5.50</span></div><p class="item-desc">Toasted raisin bread, served with butter.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Gluten Free Toast</span><span class="price">$5.50</span></div><p class="item-desc">GF toast, served with your choice of spread.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sides -->
+      <div class="menu-panel" id="tab-sides">
+        <div class="menu-grid cols2">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209841_med_9283757b-46ec-449f-a0cb-ae762aa54cec.webp" alt="Onion Rings" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Onion Rings</span><span class="price">$11</span></div><p class="item-desc">Crispy battered rings served with our Big Red sauce.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Loaded Fries</span><span class="price">$12</span></div><p class="item-desc">Crispy chips, with bacon and melted cheese. Served with garlic aioli.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Chips (Full)</span><span class="price">$8</span></div><p class="item-desc">Big box of chippies.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Wedges</span><span class="price">$10</span></div><p class="item-desc">Hot crispy wedges! Served with sweet chilli and sour cream.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Kids Nuggets</span><span class="price">$7</span></div><p class="item-desc">Chips and nuggets.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-img-placeholder"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="#2B1F17" stroke-width="1.5"/></svg></div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Small Chips</span><span class="price">$3.50</span></div><p class="item-desc">A small serve of chips.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coffee -->
+      <div class="menu-panel" id="tab-coffee">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209807_med_3594329775.webp" alt="Cappuccino" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Cappuccino</span><span class="price">$5–$5.80</span></div><p class="item-desc">Fluffy froth, bold espresso, and a dusting of magic.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209812_med_894131259.webp" alt="Flat White" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Flat White</span><span class="price">$5–$5.80</span></div><p class="item-desc">Velvety steamed milk poured over a smooth espresso base.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209821_med_1816754749.webp" alt="Latte" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Latte</span><span class="price">$5–$5.80</span></div><p class="item-desc">Silky, rich, and effortlessly smooth. A crowd favourite.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209822_med_915970375.webp" alt="Long Black" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Long Black</span><span class="price">$5–$5.80</span></div><p class="item-desc">Strong, smooth, and full of depth. No fuss, just flavour.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1359288_med_3461716531.webp" alt="Mocha" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Mocha</span><span class="price">$5.50–$6.30</span></div><p class="item-desc">Rich espresso with velvety chocolate and steamed milk, finished with a dusting of cocoa.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209813_med_4214150612.webp" alt="Hot Chocolate" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Hot Chocolate</span><span class="price">$4.50–$5.30</span></div><p class="item-desc">Premium cocoa with steamed milk for pure comfort.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209808_med_76b2fc66-7ab5-4ef5-9083-dda5b4776820.webp" alt="Chai Latte" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Chai Latte</span><span class="price">$4.50–$5.30</span></div><p class="item-desc">Steamed milk with spice-infused black tea, topped with foam.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209810_med_738805507.webp" alt="Dirty Chai" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Dirty Chai</span><span class="price">$5.50–$6.30</span></div><p class="item-desc">Chai spice meets bold espresso. Sweet, spiced, and punchy.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209809_med_598080944.webp" alt="Cold Brew" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Cold Brew</span><span class="price">$5.50–$6.30</span></div><p class="item-desc">Single-origin rotating brew, smooth and low-acid.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209811_med_2652570780.webp" alt="Espresso" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Espresso</span><span class="price">$4.50</span></div><p class="item-desc">Small but mighty. A bold, balanced shot of pure energy.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209824_med_237cba13-7bff-4cdd-821b-f05efea0bce4.webp" alt="Piccolo" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Piccolo</span><span class="price">$4.50</span></div><p class="item-desc">Small but punchy. Espresso-forward with a velvety finish.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209823_med_7c58dd9f-ea16-428b-97bc-9b80f7c8ea7e.webp" alt="Macchiato" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Macchiato</span><span class="price">$4.50</span></div><p class="item-desc">A bold shot with just a kiss of froth.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209806_med_4a48f4eb-58c2-4571-a360-f793a7937edf.webp" alt="Batch Brew" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Batch Brew</span><span class="price">$4.50–$5.30</span></div><p class="item-desc">Single-origin filter coffee, clean and bright.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drinks -->
+      <div class="menu-panel" id="tab-drinks">
+        <div class="menu-grid">
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209818_med_445545684.webp" alt="Iced Latte" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Latte</span><span class="price">$6–$7.50</span></div><p class="item-desc">Espresso meets ice and milk for a chilled, creamy classic.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209816_med_a395b572-7cd4-4a91-bfe0-04bb03b25a32.webp" alt="Iced Coffee" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Coffee</span><span class="price">$6.50–$8</span></div><p class="item-desc">Chilled and bold with smooth espresso flavour and a refreshing finish.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209814_med_228ceef1-4aac-40e4-b32d-8f2ec385f46c.webp" alt="Iced Chai" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Chai</span><span class="price">$5–$6.50</span></div><p class="item-desc">Spiced chai served over ice — refreshing, aromatic and lightly sweet.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209815_med_aa0e6480-f0cf-48cc-a4b2-d88d7258afc0.webp" alt="Iced Chocolate" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Chocolate</span><span class="price">$5–$6.50</span></div><p class="item-desc">Chilled chocolate blend with a creamy texture and smooth, sweet finish.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209820_med_9f4f8106-7b1a-4943-957c-4dfcb95c983d.webp" alt="Iced Mocha" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Mocha</span><span class="price">$6.50–$8</span></div><p class="item-desc">Cool, chocolatey coffee bliss. The ultimate treat.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1350561_med_523db5d2-e953-4818-9eb6-254571d18bfd.webp" alt="Iced Matcha" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Matcha</span><span class="price">$6.50–$8.50</span></div><p class="item-desc">Earthy matcha served cold with milk for a smooth, cooling twist.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1209819_med_830737d1-eae7-4ec6-83a7-a053fd8d437a.webp" alt="Iced Long Black" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Iced Long Black</span><span class="price">$5.50</span></div><p class="item-desc">Double espresso poured over chilled water and ice. Bold and refreshing.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1288292_med_55efb894-906c-4ad6-9259-dbed7c5aa83f.webp" alt="Milkshake" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Milkshake</span><span class="price">$6.50</span></div><p class="item-desc">Smooth, creamy and chilled — classic comfort in every sweet sip.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1288295_med_6e1c1950-c0b9-4183-9fa1-36135f6a8132.webp" alt="Thickshake" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Thickshake</span><span class="price">$8</span></div><p class="item-desc">Extra creamy and indulgent with rich, full-bodied flavour in every sip.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1288294_med_7669e39f-7762-4804-8e17-bc5f6bcf4b20.webp" alt="Smoothie" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Smoothie</span><span class="price">$8–$8.50</span></div><p class="item-desc">Cool and blended to perfection — smooth, fruity and naturally refreshing.</p></div>
+          </div>
+          <div class="menu-item reveal">
+            <img class="menu-item-img" src="https://cdn.bopple.me/images/products/product_1288290_med_02094988-9761-474a-b29b-edce4820d847.webp" alt="Kids Milkshake" loading="lazy">
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">Kids Milkshake</span><span class="price">$4.50</span></div><p class="item-desc">Mini-sized and creamy with a sweet, playful flavour — perfect for little sippers.</p></div>
+          </div>
         </div>
       </div>
 
       <div class="menu-note reveal">
-        <p>Menu &amp; live pricing are kept up to date on our ordering app — order ahead and skip the queue.</p>
+        <p>Full menu with live pricing — order ahead and skip the queue.</p>
         <a class="btn btn-primary" href="https://bopple.app/big-red-cafe/bio" target="_blank" rel="noopener">Order on Bopple →</a>
       </div>
     </div>
@@ -604,6 +908,13 @@
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  function switchTab(btn, panelId) {
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
 
   function toggleNav(btn) {
     const nav = document.getElementById('mobileNav');
