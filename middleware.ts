@@ -6,12 +6,16 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const domain = host.split(':')[0]
 
-  // Public marketing site — rewrite root to /site route handler
+  // Public marketing site — serve directly without auth checks
   if (PUBLIC_DOMAINS.includes(domain)) {
     const { pathname } = request.nextUrl
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/site', request.url))
+    if (pathname === '/' || pathname === '') {
+      const rewriteUrl = new URL(request.url)
+      rewriteUrl.pathname = '/site'
+      return NextResponse.rewrite(rewriteUrl)
     }
+    // Allow all other paths on public domain through unchanged
+    return NextResponse.next()
   }
 
   return NextResponse.next()
