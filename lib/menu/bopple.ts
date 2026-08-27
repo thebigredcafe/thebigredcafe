@@ -1,16 +1,16 @@
 export interface BoppleCategory {
   id: number
-  name: string
-  image_url: string | null
+  category_desc: string
+  image_thumb_url: string | null
 }
 
 export interface BoppleProduct {
   id: number
-  name: string
+  product_desc: string
   description: string | null
   base_price: number
   max_price: number | null
-  image_url: string | null
+  image_thumb_url: string | null
 }
 
 const BASE = 'https://orders.bopple.me/api/venues/big-red-cafe/menu'
@@ -32,7 +32,8 @@ async function get<T>(path: string): Promise<T> {
     throw new Error(`Bopple API ${path}: ${res.status} ${body.slice(0, 200)}`)
   }
   const json = await res.json()
-  return (json.data ?? json) as T
+  // API returns array directly or nested under data
+  return (Array.isArray(json) ? json : json.data ?? json) as T
 }
 
 export async function fetchCategories(): Promise<BoppleCategory[]> {
@@ -45,7 +46,7 @@ export async function fetchProducts(categoryId: number): Promise<BoppleProduct[]
 
 export async function fetchMenu(): Promise<{ category: BoppleCategory; products: BoppleProduct[] }[]> {
   const categories = await fetchCategories()
-  const filtered = categories.filter(c => c.name !== 'Gift Vouchers')
+  const filtered = categories.filter(c => c.category_desc !== 'Gift Vouchers')
   const results = await Promise.all(
     filtered.map(async (category) => ({
       category,

@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { NextResponse } from 'next/server'
-import { fetchMenu, formatPrice, type BoppleProduct } from '@/lib/menu/bopple'
+import { fetchMenu, formatPrice, type BoppleCategory, type BoppleProduct } from '@/lib/menu/bopple'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 3600
@@ -11,14 +11,14 @@ function placeholder(p: BoppleProduct): string {
 }
 
 function productCard(p: BoppleProduct): string {
-  const img = p.image_url
-    ? `<img class="menu-item-img" src="${p.image_url}" alt="${esc(p.name)}" loading="lazy">`
+  const img = p.image_thumb_url
+    ? `<img class="menu-item-img" src="${p.image_thumb_url}" alt="${esc(p.product_desc)}" loading="lazy">`
     : placeholder(p)
   const desc = p.description ? `<p class="item-desc">${esc(p.description)}</p>` : ''
   return `
           <div class="menu-item reveal">
             ${img}
-            <div class="menu-item-body"><div class="item-top"><span class="item-name">${esc(p.name)}</span><span class="price">${formatPrice(p)}</span></div>${desc}</div>
+            <div class="menu-item-body"><div class="item-top"><span class="item-name">${esc(p.product_desc)}</span><span class="price">${formatPrice(p)}</span></div>${desc}</div>
           </div>`
 }
 
@@ -30,16 +30,16 @@ function tabId(name: string): string {
   return 'tab-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '')
 }
 
-function buildMenuHtml(menu: { category: { name: string }; products: BoppleProduct[] }[]): string {
+function buildMenuHtml(menu: { category: BoppleCategory; products: BoppleProduct[] }[]): string {
   const tabs = menu.map((m, i) =>
-    `<button class="menu-tab${i === 0 ? ' active' : ''}" onclick="switchTab(this,'${tabId(m.category.name)}')">${esc(m.category.name)}</button>`
+    `<button class="menu-tab${i === 0 ? ' active' : ''}" onclick="switchTab(this,'${tabId(m.category.category_desc)}')">${esc(m.category.category_desc)}</button>`
   ).join('\n        ')
 
   const panels = menu.map((m, i) => {
     const cols = m.products.length <= 6 ? ' cols2' : ''
     const cards = m.products.map(productCard).join('')
     return `
-      <div class="menu-panel${i === 0 ? ' active' : ''}" id="${tabId(m.category.name)}">
+      <div class="menu-panel${i === 0 ? ' active' : ''}" id="${tabId(m.category.category_desc)}">
         <div class="menu-grid${cols}">${cards}
         </div>
       </div>`
